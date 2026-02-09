@@ -3,7 +3,7 @@
 #include<SDL3/SDL.h>
 #include"Components/vector.h"
 
-struct PlayerConfig { int SR, CR, FR, FG, FB, OR, OG, OB, OT, V; float S; };
+struct PlayerConfig { int h , w , start_x , start_y; float S; };
 struct EnemyConfig { int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SI; float SMIN, SMAX; };
 struct BulletConfig { int SR, CR, FR, FG, FB, OR, OG, OB, OT, V, L; float S; };
 
@@ -27,7 +27,7 @@ private:
     BulletConfig        m_bulletConfig;
 
     //the systems
-    void sMovement();
+    void sMovement(double);
     void sUserInput();
     void sLifespan();
     void sRender();
@@ -41,6 +41,9 @@ private:
     void spawnSmallEnemies(std::shared_ptr<Entity> entity);
     void spawnBullet(std::shared_ptr<Entity> entity, const vec2& mousePos);
     void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
+
+    //configuration of the internal member struct
+    void initConfigure(const std::string&);
 public:
     game(const std::string&);
     ~game();

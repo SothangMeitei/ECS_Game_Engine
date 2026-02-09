@@ -14,17 +14,11 @@ vec2::vec2(double ix , double iy) {
 
 //-------------------------------------------------------------------
 
-vec2& vec2::operator + (const vec2& rhs){
-	this->x += rhs.x;
-	this->y += rhs.y;
-
-	return *this;
+vec2 vec2::operator + (const vec2& rhs) const{
+	return vec2(this->x + rhs.x, this->y + rhs.y);
 }
-vec2& vec2::operator - (const vec2& rhs){
-	this->x -= rhs.x;
-	this->y -= rhs.y;
-
-	return *this;
+vec2 vec2::operator - (const vec2& rhs) const{
+	return vec2(this->x - rhs.x, this->y - rhs.y);
 }
 vec2& vec2::operator * (const vec2& rhs){
 	this->x *= rhs.x;
