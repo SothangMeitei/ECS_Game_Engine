@@ -1,5 +1,5 @@
 #pragma once
-class cCollision {
+struct cCollision {
 	//this is just the component so this will just store only 
 	//the part of the hit box that will represent the boundary of 
 	//the collider physics of the object that has this as a component

@@ -39,6 +39,8 @@ void EntityManager::update(){
 		m_tag_to_entities[e->getTag()].push_back(e);
 	}
 
+	m_entities_to_be_added.clear();
+
 	//now delete all of the non active elements from the list
 	std::erase_if(m_entities, [](const std::shared_ptr<Entity> &e) {
 		return !e->isActive();

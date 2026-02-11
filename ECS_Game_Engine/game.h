@@ -2,6 +2,7 @@
 #include"ECS/EntityManager.h"
 #include<SDL3/SDL.h>
 #include"Components/vector.h"
+#include<random>
 
 struct PlayerConfig { int h , w , start_x , start_y; float S; };
 struct EnemyConfig { int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SI; float SMIN, SMAX; };
@@ -44,6 +45,7 @@ private:
 
     //configuration of the internal member struct
     void initConfigure(const std::string&);
+
 public:
     game(const std::string&);
     ~game();

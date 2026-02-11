@@ -1,6 +1,16 @@
 
 #include "game.h"
 #include<fstream>
+#include<random>
+
+inline int random() {
+	std::random_device rd;
+
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> distr(1, 1000);
+
+	return distr(gen);
+}
 
 void game::sMovement(double dt) {
 	auto& entities = m_entity_manager.getEntities();
@@ -38,6 +48,13 @@ void game::sPhysics() {
 	//change the velocity depending on the input and the collision
 	const auto & entities = m_entity_manager.getEntities();
 
+	//this is for bounding all the elements within the window
+	//need to know the dimensions of the window
+	int window_w{-1};
+	int window_h{-1};
+
+	SDL_GetWindowSize(m_window , &window_w , & window_h);
+
 	for (auto& entity : entities) {
 		if (entity->m_Input && entity->m_Velocity) {
 			auto& input = entity->m_Input;
@@ -45,14 +62,38 @@ void game::sPhysics() {
 
 			vel->velocity = { 0.0f , 0.0f };
 
+			//condition for when the collider rectangle of the entity to not go out of bound of
+			//the window
+			//cap the poisiton x and the position y
+			//cap the movement area for the entities that can move
+			if (entity->m_Transform && entity->m_Shape) {
+				auto&	position			= entity->m_Transform;
+				auto	entity_dimension_x_half	= entity->m_Shape->w / 2;
+				auto	entity_dimension_y_half	= entity->m_Shape->h / 2;
+
+				float x = position->position.get_x();
+				float y = position->position.get_y();
+
+				if (x < entity_dimension_x_half) {
+					position->position.set_x(entity_dimension_x_half);
+				}
+				if (y < entity_dimension_y_half) {
+					position->position.set_y(entity_dimension_y_half);
+				}
+				if (x  > window_w - entity_dimension_x_half) {
+					position->position.set_x(window_w - entity_dimension_x_half);
+				}
+				if (y > window_h - entity_dimension_y_half) {
+					position->position.set_y(window_h - entity_dimension_y_half);
+				}
+			}
+			
 			//and the velocity is set depending on the seed of the entity
 			if (input->up)		{ vel->velocity.set_y(-vel->speed); }
 			if (input->down)	{ vel->velocity.set_y(vel->speed); }
 			if (input->left)	{ vel->velocity.set_x(-vel->speed); }
 			if (input->right)	{ vel->velocity.set_x(vel->speed); }
 		}
-		std::cout << "debug the position of the entity: ";
-		std::cout << entity->m_Transform->position.get_x() << " " << entity->m_Transform->position.get_y() << "\n";
 	}
 }
 void game::sLifespan(){
@@ -93,12 +134,39 @@ void game::sRender(){
 		}
 	}
 }
-void game::sEnemySpawner(){}
+void game::sEnemySpawner(){
+	//when the user inputs some key then this is triggered and then enemies are spawned 
+	//the spawn is at random positions in the map window
+
+	//how many enemies to spawn and where to spawn them
+
+	int total_enemies{ random() % 10 };
+	
+
+	for (int i = 1; i <= total_enemies; ++i) {
+		
+	}
+}
 void game::sCollision(){}
 
 // 4. Helper Functions
 void game::spawnPlayer(){}
-void game::spawnEnemy(){}
+void game::spawnEnemy(){
+	int window_w{ -1 };
+	int window_h{ -1 };
+
+	SDL_GetWindowSize(m_window, &window_w, &window_h);
+
+	int some_random{ random() };
+
+	auto new_entity = m_entity_manager.addEntity();
+
+	new_entity->m_Transform = std::make_shared<cTransform>(vec2(some_random%window_w , some_random%window_h));
+	new_entity->m_Collider = std::make_shared<cCollision>();
+	new_entity->m_LifeSpan = std::make_shared<cLifeSpan>();
+	new_entity->m_Shape = std::make_shared<cShape>();
+	new_entity->m_Velocity = std::make_shared<cVelocity>();
+}
 void game::spawnSmallEnemies(std::shared_ptr<Entity> entity){}
 void game::spawnBullet(std::shared_ptr<Entity> entity, const vec2& mousePos){}
 void game::spawnSpecialWeapon(std::shared_ptr<Entity> entity){}
@@ -164,7 +232,7 @@ game::game(const std::string& config_file) {
 	player->m_Transform = std::make_shared<cTransform>(vec2(200.0f, 200.0f), 1.0f, 0.0f);
 	player->m_Shape = std::make_shared<cShape>(32.0f, 32.0f, 255, 0, 0);
 	player->m_Input = std::make_shared<cInput>();
-	player->m_Velocity = std::make_shared<cVelocity>(vec2(0.0f, 0.0f), 1.0f);
+	player->m_Velocity = std::make_shared<cVelocity>(vec2(0.0f, 0.0f), 200.0f);
 }
 
 game::~game() {
