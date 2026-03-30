@@ -4,9 +4,9 @@
 #include<random>
 
 inline int random() {
-	std::random_device rd;
+	static std::random_device rd;
 
-	std::mt19937 gen(rd());
+	static std::mt19937 gen(rd());
 	std::uniform_int_distribution<> distr(1, 1000);
 
 	return distr(gen);
@@ -20,6 +20,8 @@ void game::sMovement(double dt) {
 			// New Pos = Old Pos + (Velocity * TimePassed)
 			e->m_Transform->position.set_x(e->m_Transform->position.get_x() + (e->m_Velocity->velocity.get_x() * dt));
 			e->m_Transform->position.set_y(e->m_Transform->position.get_y() + (e->m_Velocity->velocity.get_y() * dt));
+
+			e->m_Transform->angle += 0.2f;
 		}
 	}
 }
@@ -56,43 +58,50 @@ void game::sPhysics() {
 	SDL_GetWindowSize(m_window , &window_w , & window_h);
 
 	for (auto& entity : entities) {
-		if (entity->m_Input && entity->m_Velocity) {
-			auto& input = entity->m_Input;
-			auto& vel = entity->m_Velocity;
-
-			vel->velocity = { 0.0f , 0.0f };
+		if (entity->m_Velocity) {
+			auto& vel_component = entity->m_Velocity;
 
 			//condition for when the collider rectangle of the entity to not go out of bound of
 			//the window
 			//cap the poisiton x and the position y
 			//cap the movement area for the entities that can move
-			if (entity->m_Transform && entity->m_Shape) {
-				auto&	position			= entity->m_Transform;
-				auto	entity_dimension_x_half	= entity->m_Shape->w / 2;
-				auto	entity_dimension_y_half	= entity->m_Shape->h / 2;
+			if (entity->m_Transform && entity->m_Velocity && entity->m_Shape) {
 
-				float x = position->position.get_x();
-				float y = position->position.get_y();
+				auto& pos = entity->m_Transform->position;
+				auto& vel = entity->m_Velocity->velocity;
 
-				if (x < entity_dimension_x_half) {
-					position->position.set_x(entity_dimension_x_half);
+				// Calculate half-width (radius) for collision
+				float r = entity->m_Shape->w / 2.0f;
+
+				// --- LEFT WALL ---
+				if (pos.get_x() < r) {
+					pos.set_x(r);               // 1. Clamp: Pull it out of the wall
+					vel.set_x(vel.get_x() * -1);// 2. Bounce: Invert X velocity
 				}
-				if (y < entity_dimension_y_half) {
-					position->position.set_y(entity_dimension_y_half);
+				// --- RIGHT WALL ---
+				if (pos.get_x() > window_w - r) {
+					pos.set_x(window_w - r);
+					vel.set_x(vel.get_x() * -1);
 				}
-				if (x  > window_w - entity_dimension_x_half) {
-					position->position.set_x(window_w - entity_dimension_x_half);
+				// --- TOP WALL ---
+				if (pos.get_y() < r) {
+					pos.set_y(r);
+					vel.set_y(vel.get_y() * -1);
 				}
-				if (y > window_h - entity_dimension_y_half) {
-					position->position.set_y(window_h - entity_dimension_y_half);
+				// --- BOTTOM WALL ---
+				if (pos.get_y() > window_h - r) {
+					pos.set_y(window_h - r);
+					vel.set_y(vel.get_y() * -1);
 				}
 			}
 			
-			//and the velocity is set depending on the seed of the entity
-			if (input->up)		{ vel->velocity.set_y(-vel->speed); }
-			if (input->down)	{ vel->velocity.set_y(vel->speed); }
-			if (input->left)	{ vel->velocity.set_x(-vel->speed); }
-			if (input->right)	{ vel->velocity.set_x(vel->speed); }
+			if (auto input = entity->m_Input) {
+				vel_component->velocity = { 0.0f , 0.0f };
+				if (input->up) { vel_component->velocity.set_y(-vel_component->speed); }
+				if (input->down) { vel_component->velocity.set_y(vel_component->speed); }
+				if (input->left) { vel_component->velocity.set_x(-vel_component->speed); }
+				if (input->right) { vel_component->velocity.set_x(vel_component->speed); }
+			}
 		}
 	}
 }
@@ -109,67 +118,190 @@ void game::sLifespan(){
 		}
 	}
 }
-void game::sRender(){
-	//start drawing all the things that can be drawn
-	//if it has a shape it can be drawn
+void game::sRender() {
 	auto entities = m_entity_manager.getEntities();
 
 	for (auto& entity : entities) {
-		//for now all the shapes are just going to be rectangles
 		if (entity->m_Shape && entity->m_Transform) {
 			auto& shape = entity->m_Shape;
 			auto& transform = entity->m_Transform;
-			//now how to render this rectangle onto the screen
-			//a fill rectangle
-			SDL_FRect rect;
 
-			rect.w = shape->w;
-			rect.h = shape->h;
-			rect.x = (transform->position.get_x()) - (rect.w / 2);
-			rect.y = (transform->position.get_y()) - (rect.h / 2);
+			// FIX 1: Set the color BEFORE drawing!
+			// Without this, you are drawing invisible black lines.
+			SDL_SetRenderDrawColor(m_renderer, shape->r, shape->g, shape->b, 255);
 
-			SDL_RenderFillRect(m_renderer, &rect);
-			SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255); // White border
-			SDL_RenderRect(m_renderer, &rect);
+			drawPolygon(
+				transform->position.get_x(),        // Center X
+				transform->position.get_y(),        // Center Y
+				shape->w / 2.0f,                    // Radius (Half the width)
+				shape->vertices,                    // Number of sides
+				transform->angle                    // Rotation
+			);
 		}
 	}
 }
-void game::sEnemySpawner(){
-	//when the user inputs some key then this is triggered and then enemies are spawned 
-	//the spawn is at random positions in the map window
+void game::sEnemySpawner() {
+	if (m_current_frame - m_last_spawn_time >= m_enemyConfig.SI) {
+		spawnEnemy();
 
-	//how many enemies to spawn and where to spawn them
-
-	int total_enemies{ random() % 10 };
-	
-
-	for (int i = 1; i <= total_enemies; ++i) {
-		
+		// Reset the timer
+		m_last_spawn_time = m_current_frame;
 	}
 }
-void game::sCollision(){}
+
+void game::sCollision() {
+	auto& entities = m_entity_manager.getEntities();
+
+	// Loop for collision checks
+	for (auto& a : entities) {
+		// We only care about collisions involving the Player for now
+		// (Or loop all vs all if you want enemies bumping enemies)
+		if (a->getTag() != "Player" && a->getTag() != "Enemy") continue;
+
+		for (auto& b : entities) {
+			// 1. Don't check self, and avoid double checking (A vs B, then B vs A)
+			if (a == b) continue;
+			if (a->getTag() == "Player" && b->getTag() == "Player") continue; // Don't check player vs player
+
+			// 2. Check Overlap (Circle Collision)
+			if (a->m_Shape && b->m_Shape && a->m_Transform && b->m_Transform) {
+
+				vec2 posA = a->m_Transform->position;
+				vec2 posB = b->m_Transform->position;
+				vec2 diff = posA - posB; // Vector pointing from B to A
+
+				double dist = diff.length();
+				double radiusA = a->m_Shape->w / 2.0;
+				double radiusB = b->m_Shape->w / 2.0;
+				double overlap = (radiusA + radiusB) - dist;
+
+				// COLLISION DETECTED
+				if (overlap > 0) {
+
+					// --- STEP 1: RESOLVE OVERLAP (Static Resolution) ---
+					// Push them apart so they aren't stuck inside each other
+					diff.normalize(); // Now 'diff' is the Normal Vector (n)
+
+					// Move A half the overlap distance
+					a->m_Transform->position.x += diff.x * (overlap / 2.0);
+					a->m_Transform->position.y += diff.y * (overlap / 2.0);
+
+					// Move B the other half
+					b->m_Transform->position.x -= diff.x * (overlap / 2.0);
+					b->m_Transform->position.y -= diff.y * (overlap / 2.0);
+
+
+					// --- STEP 2: DYNAMIC RESOLUTION (The Bounce) ---
+					// Only bounce if they have velocity
+					if (a->m_Velocity && b->m_Velocity) {
+
+						vec2& v1 = a->m_Velocity->velocity;
+						vec2& v2 = b->m_Velocity->velocity;
+
+						// Calculate Relative Velocity
+						vec2 relativeVelocity = v1 - v2;
+
+						// Calculate velocity along the normal (Dot Product)
+						double velocityAlongNormal = relativeVelocity.x * diff.x + relativeVelocity.y * diff.y;
+
+						// If velocities are separating, do nothing (they are already moving apart)
+						if (velocityAlongNormal > 0) continue;
+
+						// Calculate Restitution (Bounciness)
+						// 1.0 = Perfect Bounce, 0.5 = Dull thud
+						double e = 1.0;
+
+						// Calculate Impulse Scalar
+						double j = -(1 + e) * velocityAlongNormal;
+
+						// Assuming equal mass for now (j /= 1/m1 + 1/m2 becomes j /= 2)
+						j /= 2.0;
+
+						// Apply Impulse
+						vec2 impulse = diff * j;
+
+						// Change velocities
+						v1.x += impulse.x;
+						v1.y += impulse.y;
+
+						v2.x -= impulse.x;
+						v2.y -= impulse.y;
+					}
+				}
+			}
+		}
+	}
+}
 
 // 4. Helper Functions
-void game::spawnPlayer(){}
-void game::spawnEnemy(){
-	int window_w{ -1 };
-	int window_h{ -1 };
+void game::spawnPlayer(){
+	auto entity = m_entity_manager.addEntity("Player");
+	//the player is by default going to be a rectangle
+	entity->m_Collider			= std::make_shared<cCollision>(m_playerConfig.h , m_playerConfig.w);
+	entity->m_Input				= std::make_shared<cInput>();
+	entity->m_Score				= std::make_shared<cScore>();
+	entity->m_Transform			= std::make_shared<cTransform>(vec2(m_playerConfig.start_x , m_playerConfig.start_y) , 1.0 , 0.0);
+	entity->m_Velocity			= std::make_shared<cVelocity>(vec2(0 , 0) , m_playerConfig.S);
+	entity->m_Shape				= std::make_shared<cShape>(m_playerConfig.h, m_playerConfig.w , 255 , 255 , 255 , 4);//width height r g b total number of vertices
 
+}
+void game::spawnEnemy() {
+	auto entity = m_entity_manager.addEntity("Enemy");
+
+	int vertices = m_enemyConfig.VMIN + (rand() % (m_enemyConfig.VMAX - m_enemyConfig.VMIN + 1));
+
+	int window_w, window_h;
 	SDL_GetWindowSize(m_window, &window_w, &window_h);
 
-	int some_random{ random() };
+	float ex = (float)(rand() % (window_w - m_enemyConfig.SR * 2) + m_enemyConfig.SR);
+	float ey = (float)(rand() % (window_h - m_enemyConfig.SR * 2) + m_enemyConfig.SR);
 
-	auto new_entity = m_entity_manager.addEntity();
+	float speed = m_enemyConfig.SMIN +
+		(static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (m_enemyConfig.SMAX - m_enemyConfig.SMIN);
 
-	new_entity->m_Transform = std::make_shared<cTransform>(vec2(some_random%window_w , some_random%window_h));
-	new_entity->m_Collider = std::make_shared<cCollision>();
-	new_entity->m_LifeSpan = std::make_shared<cLifeSpan>();
-	new_entity->m_Shape = std::make_shared<cShape>();
-	new_entity->m_Velocity = std::make_shared<cVelocity>();
+	float angle = (float)(rand() % 360) * (3.14159f / 180.0f); 
+	vec2 velocityVec(cos(angle) * speed, sin(angle) * speed);
+
+	entity->m_Transform = std::make_shared<cTransform>(vec2(ex, ey), 1.0f, 0.0);
+
+	entity->m_Shape = std::make_shared<cShape>(
+		m_enemyConfig.SR * 2.0f, m_enemyConfig.SR * 2.0f,
+		m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB,
+		vertices 
+	);
+
+	entity->m_Velocity = std::make_shared<cVelocity>(velocityVec, speed);
+
+	entity->m_Collider = std::make_shared<cCollision>(m_enemyConfig.CR * 2, m_enemyConfig.CR *2);
+
+	if (m_enemyConfig.L > 0) {
+		entity->m_LifeSpan = std::make_shared<cLifeSpan>(m_enemyConfig.L);
+	}
 }
 void game::spawnSmallEnemies(std::shared_ptr<Entity> entity){}
 void game::spawnBullet(std::shared_ptr<Entity> entity, const vec2& mousePos){}
 void game::spawnSpecialWeapon(std::shared_ptr<Entity> entity){}
+
+void game::drawPolygon(double centerX, double centerY, double radius, int vertices, double rotation) {
+	// 1. Create a vector of points (n + 1 to close the loop)
+	std::vector<SDL_FPoint> points(vertices + 1);
+
+	// 2. Calculate the angle step (in radians)
+	float angleStep = (2.0f * 3.14159f) / vertices;
+
+	for (int i = 0; i <= vertices; ++i) {
+		// We add 'rotation' so the shape can spin
+		float currentAngle = i * angleStep + rotation;
+
+		points[i].x = centerX + radius * cosf(currentAngle);
+		points[i].y = centerY + radius * sinf(currentAngle);
+	}
+
+	// 3. Draw the connected lines
+	SDL_RenderLines(m_renderer, points.data(), (int)points.size());
+}
+
+
 
 void game::initConfigure(const std::string& config_file) {
 	std::ifstream fin(config_file);
@@ -185,11 +317,6 @@ void game::initConfigure(const std::string& config_file) {
 	while (fin >> type) {
 
 		if (type == "Player") {
-			// Read Player Config: Shape Radius, Collision Radius, Speed, etc.
-			// Example File Line: Player 32 32 5.0 1280 720 
-			// Matches struct: int h, w, start_x, start_y; float S;
-			// NOTE: The order below must match your text file EXACTLY.
-
 			fin >> m_playerConfig.w        // Width
 				>> m_playerConfig.h        // Height
 				>> m_playerConfig.start_x  // Start X
@@ -227,12 +354,9 @@ game::game(const std::string& config_file) {
 	m_window	= SDL_CreateWindow("Window", 900, 400, SDL_WINDOW_RESIZABLE);
 	m_renderer	= SDL_CreateRenderer(m_window, nullptr);
 
-	auto player = m_entity_manager.addEntity();
+	initConfigure(config_file);
 
-	player->m_Transform = std::make_shared<cTransform>(vec2(200.0f, 200.0f), 1.0f, 0.0f);
-	player->m_Shape = std::make_shared<cShape>(32.0f, 32.0f, 255, 0, 0);
-	player->m_Input = std::make_shared<cInput>();
-	player->m_Velocity = std::make_shared<cVelocity>(vec2(0.0f, 0.0f), 200.0f);
+	spawnPlayer();
 }
 
 game::~game() {
@@ -266,6 +390,10 @@ void game::start() {
 			sMovement(dt); // Pass dt here!
 
 			sCollision();
+
+			sEnemySpawner();
+
+			m_current_frame++;	//for calculating frame related stuffs like that of the enemies that is being spawned
 			sLifespan();
 		}
 

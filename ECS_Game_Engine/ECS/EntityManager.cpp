@@ -1,19 +1,6 @@
 #include"EntityManager.h"
 #include<string>
 
-/*
-	The Modern Method: std::erase_if
-	This function is part of the <vector> header. 
-	It performs a "linear scan" of your vector 
-	and removes every element that meets a specific condition (a "predicate").
-
-	How it works: It moves all the "live" entities to the front of
-	the vector and then shrinks the vector
-	to chop off the "dead" ones at the end in one operation.
-*/
-
-
-
 using namespace std::string_literals;
 
 EntityManager::EntityManager(){}

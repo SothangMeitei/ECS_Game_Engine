@@ -1,15 +1,14 @@
 #pragma once
 
 class vec2 {
-private:
-	double x, y;
 public:
+	double x, y;
 	vec2();
 	vec2(double, double);
 
 	vec2 operator + (const vec2& rhs) const;
 	vec2 operator - (const vec2& rhs) const;
-	vec2& operator * (const vec2& rhs);
+	vec2 operator * (const double scale)const;
 
 	void operator += (const vec2& rhs);
 	void operator -= (const vec2& rhs);
@@ -26,4 +25,6 @@ public:
 
 	void normalize();
 	double length();
+	double dist(const vec2& rhs) const;
+	double dot(const vec2& rhs) const;
 };

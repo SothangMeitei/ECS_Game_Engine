@@ -7,9 +7,10 @@ struct cShape
 	float h;
 
 	int r, g, b;
+	int vertices;
 
-	cShape(float width, float height, int red, int green, int blue)
-		: w(width), h(height), r(red), g(green), b(blue) {
+	cShape(float width, float height, int red, int green, int blue , int v)
+		: w(width), h(height), r(red), g(green), b(blue) , vertices(v){
 	}
 };
 

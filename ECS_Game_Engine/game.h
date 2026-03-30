@@ -20,6 +20,7 @@ private:
     bool                            m_is_running = true;
     bool                            m_paused = false;
     long long                       m_current_frame = 0;
+    long long                       m_last_spawn_time = 0;
 
     //input initial default values for the selected entities
     // 2. Configuration Data (Loaded from file)
@@ -42,6 +43,7 @@ private:
     void spawnSmallEnemies(std::shared_ptr<Entity> entity);
     void spawnBullet(std::shared_ptr<Entity> entity, const vec2& mousePos);
     void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
+    void drawPolygon(double, double, double, int , double);
 
     //configuration of the internal member struct
     void initConfigure(const std::string&);

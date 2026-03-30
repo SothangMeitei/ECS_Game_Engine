@@ -64,4 +64,7 @@
     <ClInclude Include="Components\cShape.h" />
     <ClInclude Include="Components\cLifeSpan.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="config.txt" />
+  </ItemGroup>
 </Project>
