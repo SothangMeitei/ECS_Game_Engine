@@ -34,6 +34,21 @@
     <ClCompile Include="ECS\EntityManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TexturesSpriteAnimation\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TexturesSpriteAnimation\Sprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TexturesSpriteAnimation\Animation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Systems\sInput.h">
@@ -63,8 +78,16 @@
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="Components\cShape.h" />
     <ClInclude Include="Components\cLifeSpan.h" />
+    <ClInclude Include="GameEngine.h" />
+    <ClInclude Include="AbstractScene.h" />
+    <ClInclude Include="TexturesSpriteAnimation\Texture.h" />
+    <ClInclude Include="TexturesSpriteAnimation\Sprite.h" />
+    <ClInclude Include="TexturesSpriteAnimation\Animation.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\SDL3_image-devel-3.2.4-VC\SDL3_image-3.2.4\lib\x64\SDL3_image.dll" />
   </ItemGroup>
 </Project>
