@@ -291,7 +291,7 @@ void game::drawPolygon(double centerX, double centerY, double radius, int vertic
 
 	for (int i = 0; i <= vertices; ++i) {
 		// We add 'rotation' so the shape can spin
-		float currentAngle = i * angleStep + rotation;
+		double currentAngle = i * angleStep + rotation;
 
 		points[i].x = centerX + radius * cosf(currentAngle);
 		points[i].y = centerY + radius * sinf(currentAngle);

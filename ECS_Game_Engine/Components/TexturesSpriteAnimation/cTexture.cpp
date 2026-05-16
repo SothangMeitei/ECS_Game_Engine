@@ -1,6 +1,6 @@
-#include "Texture.h"
+#include "cTexture.h"
 
-Texture::Texture(std::string& path, std::string& ID, SDL_Renderer*& renderer) :m_path(path), m_ID(ID) {
+Texture::Texture(const std::string& path,const std::string& ID, SDL_Renderer*& renderer) :m_path(path), m_ID(ID) {
 	m_surfaceFromCPU = IMG_Load(m_path.c_str());
 
 	if (!m_surfaceFromCPU) {
@@ -9,6 +9,13 @@ Texture::Texture(std::string& path, std::string& ID, SDL_Renderer*& renderer) :m
 	}
 
 	m_TextureFromGPU = SDL_CreateTextureFromSurface(renderer, m_surfaceFromCPU);
+
+	if (!m_TextureFromGPU) {
+		std::cerr << "Could not create texture from: " << m_path
+			<< ". SDL Error: " << SDL_GetError() << "\n";
+	}
+
+	delete m_surfaceFromCPU;
 }
 
 Texture::~Texture() {

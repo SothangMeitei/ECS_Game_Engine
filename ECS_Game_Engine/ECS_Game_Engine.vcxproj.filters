@@ -37,16 +37,16 @@
     <ClCompile Include="GameEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AbstractScene.cpp">
+    <ClCompile Include="Components\TexturesSpriteAnimation\cTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TexturesSpriteAnimation\Texture.cpp">
+    <ClCompile Include="Components\TexturesSpriteAnimation\cSprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TexturesSpriteAnimation\Sprite.cpp">
+    <ClCompile Include="Components\TexturesSpriteAnimation\cAnimation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TexturesSpriteAnimation\Animation.cpp">
+    <ClCompile Include="Components\Scenes\MenuScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,9 +80,11 @@
     <ClInclude Include="Components\cLifeSpan.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="AbstractScene.h" />
-    <ClInclude Include="TexturesSpriteAnimation\Texture.h" />
-    <ClInclude Include="TexturesSpriteAnimation\Sprite.h" />
-    <ClInclude Include="TexturesSpriteAnimation\Animation.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\cTexture.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\cSprite.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\cAnimation.h" />
+    <ClInclude Include="Components\Scenes\MenuScene.h" />
+    <ClInclude Include="Components\Action.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />

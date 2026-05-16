@@ -1,9 +1,12 @@
 #pragma once
 #include"ECS/EntityManager.h"
-#include"TexturesSpriteAnimation/Animation.h"
-#include"TexturesSpriteAnimation/Texture.h"
+#include"Components/TexturesSpriteAnimation/cAnimation.h"
+#include"Components/TexturesSpriteAnimation/cTexture.h"
 #include<unordered_map>
-#include"GameEngine.h"
+
+
+class GameEngine;
+class Action;
 
 class AbstractScene
 {
@@ -15,12 +18,26 @@ protected:
 	 std::unordered_map<std::string, Animation>		m_animations;
 	 std::unordered_map<std::string, std::string>	m_soundPaths;
 
-	 std::unordered_map<std::string, int>			m_actionMap;
+	 std::unordered_map<int, std::string>			m_actionMap;
 
 public:
-	AbstractScene();
+	AbstractScene() = default;
 	virtual ~AbstractScene() = default;
 
-	virtual void doAction() = 0;
+	void registerAction(int inputKey, const std::string& actionName) {
+		m_actionMap[inputKey] = actionName;
+	}
+
+	const std::unordered_map<int, std::string>& getActionMap() const{
+		return m_actionMap;
+	}
+
+	virtual void sDoAction(const Action&) = 0;
+
+	virtual void updateInternals() = 0;
+
+	virtual void render() = 0;
+
+	virtual void play() = 0;
 };
 

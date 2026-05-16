@@ -131,20 +131,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractScene.cpp" />
-    <ClCompile Include="TexturesSpriteAnimation\Animation.cpp" />
+    <ClCompile Include="Components\Scenes\MenuScene.cpp" />
+    <ClCompile Include="Components\TexturesSpriteAnimation\cAnimation.cpp" />
     <ClCompile Include="Components\vector.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="TexturesSpriteAnimation\Sprite.cpp" />
-    <ClCompile Include="TexturesSpriteAnimation\Texture.cpp" />
+    <ClCompile Include="Components\TexturesSpriteAnimation\cSprite.cpp" />
+    <ClCompile Include="Components\TexturesSpriteAnimation\cTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractScene.h" />
-    <ClInclude Include="TexturesSpriteAnimation\Animation.h" />
+    <ClInclude Include="Components\Action.h" />
+    <ClInclude Include="Components\Scenes\MenuScene.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\cAnimation.h" />
     <ClInclude Include="Components\cCollision.h" />
     <ClInclude Include="Components\cInput.h" />
     <ClInclude Include="Components\cLifeSpan.h" />
@@ -159,16 +161,19 @@
     <ClInclude Include="ECS\EntityManager.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="GameEngine.h" />
-    <ClInclude Include="TexturesSpriteAnimation\Sprite.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\cSprite.h" />
     <ClInclude Include="Systems\sInput.h" />
     <ClInclude Include="Systems\sRender.h" />
-    <ClInclude Include="TexturesSpriteAnimation\Texture.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\cTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\SDL3_image-devel-3.2.4-VC\SDL3_image-3.2.4\lib\x64\SDL3_image.dll" />
+    <None Include="..\..\..\..\SDL3_image-devel-3.2.4-VC\SDL3_image-3.2.4\lib\x64\SDL3_image.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
