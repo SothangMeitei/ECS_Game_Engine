@@ -37,15 +37,6 @@
     <ClCompile Include="GameEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Components\TexturesSpriteAnimation\cTexture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\TexturesSpriteAnimation\cSprite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\TexturesSpriteAnimation\cAnimation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Components\Scenes\MenuScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -89,7 +80,6 @@
     <ClInclude Include="Components\cLifeSpan.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="AbstractScene.h" />
-    <ClInclude Include="Components\TexturesSpriteAnimation\cTexture.h" />
     <ClInclude Include="Components\TexturesSpriteAnimation\cSprite.h" />
     <ClInclude Include="Components\TexturesSpriteAnimation\cAnimation.h" />
     <ClInclude Include="Components\Scenes\MenuScene.h" />
@@ -99,6 +89,8 @@
     <ClInclude Include="Components\Scenes\gamePlayScene.h" />
     <ClInclude Include="event.h" />
     <ClInclude Include="eventBus.h" />
+    <ClInclude Include="Components\cHealth.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\AssetManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />

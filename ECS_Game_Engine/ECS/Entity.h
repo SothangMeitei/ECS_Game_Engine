@@ -14,6 +14,9 @@
 #include"../Components/cLifeSpan.h"
 #include"../Components/cTextOutput.h"
 #include"../Components/cLinkedScene.h"
+#include"../Components/cHealth.h"
+#include"../Components/TexturesSpriteAnimation/cAnimation.h"
+#include"../Components/TexturesSpriteAnimation/cSprite.h"
 
 class Entity {
 private:
@@ -30,6 +33,9 @@ public:
     std::shared_ptr<cLifeSpan>  m_LifeSpan;
     std::shared_ptr<cTextOutput> m_TextOutput;
     std::shared_ptr<cLinkedScene> m_LinkScene;
+    std::shared_ptr<cHealth>    m_Health;
+    std::shared_ptr<cAnimation> m_Animation;
+    std::shared_ptr<cSprite>    m_Sprite;
 
     //for manipulating and getting the active state of the entity
     void destroy();

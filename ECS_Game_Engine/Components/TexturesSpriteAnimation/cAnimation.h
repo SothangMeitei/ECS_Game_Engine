@@ -1,26 +1,28 @@
 #pragma once
-#include"cTexture.h"
-#include<string>
-#include<SDL3/SDL.h>
+#include <string>
+#include <SDL3/SDL.h>
 
-class Animation
-{
-private:
-	std::string m_name;
-	Texture*	m_sourceImage;
+struct AnimState {
+    int frameCount;
+    float frameDuration;
+    SDL_FRect startRect;
+};
 
-	SDL_FRect	m_sourceRectangle;
-	SDL_FRect	m_initialSourceRectangle;
-	SDL_FRect	m_destinationRectagle;
+struct cAnimation {
+    std::string                                 textureID;     
+    std::unordered_map<std::string, AnimState>  states;
 
-	int			m_animationSpeed;
-	int			m_numberOfFrames;
-public:
-	Animation(std::string_view ,Texture*);
-	~Animation();
+    std::string     currentAnimName;
+    int             currentFrame = 0;      // Which frame are we on?
+    float           timeElapsed = 0.0f;  // Internal timer
 
-	void play();
-	void pause();
-	const std::string& getName() const;
+    void changeState(const std::string& newStateName) {
+        if (currentAnimName != newStateName) {
+            currentAnimName = newStateName;
+            currentFrame = 0;
+            timeElapsed = 0.0f;
+        }
+    }
+    cAnimation(const std::string& textureID) : textureID(textureID) {}
 };
 

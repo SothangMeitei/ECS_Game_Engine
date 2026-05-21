@@ -40,8 +40,8 @@ private:
 public:
 	MenuScene(const std::string_view);
 
-	void play() override;					//this just starts the showing of this scene that is start the action update and render
+	void play(float) override;					//this just starts the showing of this scene that is start the action update and render
 	void sDoAction(const Action&) override;	//each text box will contain the name of the scene that it will go to and not the actual scene pointer the game engine will handle the chainging of the current scene
-	void updateInternals() override;		//dynamically add new scenes update the position of the selector rectangle
+	void updateInternals(float) override;		//dynamically add new scenes update the position of the selector rectangle
 	void render() override;
 };

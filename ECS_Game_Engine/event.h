@@ -33,35 +33,39 @@
 #include"ECS/Entity.h"
 #include<memory>
 
-class event
-{
-public:
-	virtual ~event() = default;
-};
-
 enum eventTypes {
 	damageEvent,
 	spawnEntityEvent
 };
 
-class damageEvent : public event{
+class event
+{
+public:
+	virtual ~event() = default;
+	virtual eventTypes getEventType() const = 0;
+};
+
+class DamageEvent : public event{
 public:
 	std::shared_ptr<Entity> damageDealer;
 	std::shared_ptr<Entity> damageReciever;
 	int damageAmount;
 
-	damageEvent(const std::shared_ptr<Entity> e1
+	DamageEvent(const std::shared_ptr<Entity> e1
 				, const std::shared_ptr<Entity> e2
 				, int damage)
 		: damageDealer(e1), damageReciever(e2) , damageAmount(damage) { }
+
+	eventTypes getEventType() const override { return eventTypes::damageEvent; }
 };
 
-class spawnEntityEvent : public event{
+class SpawnEntityEvent : public event{
 public:
-	std::string type;
+	std::string type;	//or the tag for the entity , that is the type of entity that it is whether it is a player or it is a bullet or npc or anything
 	vec2 position;
 
-	spawnEntityEvent(const std::string& type
+	SpawnEntityEvent(const std::string& type
 					, const vec2& position)
 		: type(type) , position(position){ }
+	eventTypes getEventType() const override { return eventTypes::spawnEntityEvent; }
 };

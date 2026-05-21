@@ -95,8 +95,8 @@ MenuScene::MenuScene(const std::string_view pathConfigurationFile) {
     registerAction(SDL_SCANCODE_RETURN, "enterScene");
 }
 
-void MenuScene::play() {
-    updateInternals();
+void MenuScene::play(float deltaTime) {
+    updateInternals(deltaTime);
     render();
 }
 
@@ -129,7 +129,7 @@ void MenuScene::sDoAction(const Action& action) {
     }
 }
 
-void MenuScene::updateInternals() {
+void MenuScene::updateInternals(float deltaTime) {
     // Synchronize the Visual State to the Logical State
     // Calculate the exact Y position the selector should be at
     float targetY = m_startY + (m_selectedIndex * (m_rectHeight + m_padding));

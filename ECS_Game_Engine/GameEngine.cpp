@@ -36,7 +36,7 @@ void GameEngine::paused() { m_paused = !m_paused; }
 void GameEngine::start() { 
 	while (m_isRunning) {
 		sUserInput();
-		m_mapSceneNameToSceneObject[getCurrentSceneName()]->play();
+		m_mapSceneNameToSceneObject[getCurrentSceneName()]->play(1);
 	}
 }
 void GameEngine::quit(){m_isRunning = false;}

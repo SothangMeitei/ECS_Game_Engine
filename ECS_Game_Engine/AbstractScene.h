@@ -1,10 +1,9 @@
 #pragma once
 #include"ECS/EntityManager.h"
-#include"Components/TexturesSpriteAnimation/cAnimation.h"
-#include"Components/TexturesSpriteAnimation/cTexture.h"
+#include"Components/TexturesSpriteAnimation/AssetManager.h"
 #include<unordered_map>
 #include"Components/Action.h"
-
+#include"../../eventBus.h"
 
 class GameEngine;
 class Action;
@@ -14,9 +13,8 @@ class AbstractScene
 protected:
 	 EntityManager	m_manager;
 	 GameEngine*	m_gameEngineOwnerBackPointer;
-	 
-	 std::unordered_map<std::string, Texture>		m_textures;
-	 std::unordered_map<std::string, Animation>		m_animations;
+	 eventBus		m_internalEventBus;
+	 AssetManager	m_assetManager;
 	 std::unordered_map<std::string, std::string>	m_soundPaths;
 
 	 std::unordered_map<int, std::string>			m_actionMap;
@@ -35,10 +33,10 @@ public:
 
 	virtual void sDoAction(const Action&) = 0;
 
-	virtual void updateInternals() = 0;
+	virtual void updateInternals(float) = 0;
 
 	virtual void render() = 0;
 
-	virtual void play() = 0;
+	virtual void play(float) = 0;
 };
 

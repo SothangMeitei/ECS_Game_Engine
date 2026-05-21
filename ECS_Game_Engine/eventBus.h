@@ -13,17 +13,27 @@
 class eventBus
 {
 private:
-	std::unordered_map < eventTypes, std::vector<std::function<void(event*)>>> m_subscribers;
-	std::vector<event*> m_eventQueue;
+	//here the function takes in a type of event* to allow for polymorphic behaviour
+	std::unordered_map < eventTypes, std::vector<std::function<void(const event*)>>> m_subscribers;
+	std::vector<std::shared_ptr<event>> m_eventQueue;
 public:
 	eventBus() {}
 
-	void subscribe( eventTypes typeOfEvent, std::function<void(event*)> funct) {
+	//this calls a funtion that is defined by me therefore there are various systems that is hand writted for the resolution of the events , this is the event consumer
+	void subscribe( eventTypes typeOfEvent, std::function<void(const event*)> funct) {
 		m_subscribers[typeOfEvent].push_back(funct);
 	}
-
-	void publishEvent(eventTypes type, event* event) {
-
+	//this funtion is to be called by the systems in the scene to create the events for example the input system may generate the create entity event , this is the event generator
+	void publishEvent(std::shared_ptr<event> event) {
+		m_eventQueue.push_back(event);
+	}
+	void resolveEventsFromEventQueue() {
+		for (const auto& event : m_eventQueue) {
+			for (const auto& subscriberForThisEvent : m_subscribers[event->getEventType()]) {
+				subscriberForThisEvent(event.get());
+			}
+		}
+		m_eventQueue.clear();
 	}
 };
 

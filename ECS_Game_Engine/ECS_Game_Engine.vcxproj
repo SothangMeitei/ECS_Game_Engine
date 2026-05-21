@@ -132,7 +132,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Components\Scenes\MenuScene.cpp" />
-    <ClCompile Include="Components\TexturesSpriteAnimation\cAnimation.cpp" />
     <ClCompile Include="Components\vector.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
@@ -142,11 +141,10 @@
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Components\Scenes\gamePlayScene.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Components\TexturesSpriteAnimation\cSprite.cpp" />
-    <ClCompile Include="Components\TexturesSpriteAnimation\cTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractScene.h" />
+    <ClInclude Include="Components\cHealth.h" />
     <ClInclude Include="Components\cLinkedScene.h" />
     <ClInclude Include="Components\Action.h" />
     <ClInclude Include="Components\cTextOutput.h" />
@@ -158,6 +156,7 @@
     <ClInclude Include="Components\cScore.h" />
     <ClInclude Include="Components\cTransform.h" />
     <ClInclude Include="Components\cVelocity.h" />
+    <ClInclude Include="Components\TexturesSpriteAnimation\AssetManager.h" />
     <ClInclude Include="Components\vector.h" />
     <ClInclude Include="Core\Timer.h" />
     <ClInclude Include="Core\Window.h" />
@@ -172,7 +171,6 @@
     <ClInclude Include="Components\Scenes\gamePlayScene.h" />
     <ClInclude Include="Systems\sInput.h" />
     <ClInclude Include="Systems\sRender.h" />
-    <ClInclude Include="Components\TexturesSpriteAnimation\cTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Components\Scenes\menuSceneConfiguration.txt" />

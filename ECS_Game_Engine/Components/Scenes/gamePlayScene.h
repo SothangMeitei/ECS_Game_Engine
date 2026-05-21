@@ -1,6 +1,7 @@
 #pragma once
 #include"../../AbstractScene.h"
 #include<functional>
+
 class gamePlayScene: public AbstractScene
 {
 private:
@@ -10,10 +11,6 @@ private:
 	
 public:
 	gamePlayScene(const std::string& configFile);
-
-	//systems
-	void sCollision();
-	void sPhysics();
 
 	enum class entityType {
 		player,
@@ -25,8 +22,17 @@ public:
 		other
 	};
 
-	void sSpawnEntity(entityType type , const vec2& position = {0 , 0});
+	//systems
+	void sCollision();
+	void sPhysics();
 	void sMovement();
+	void sPlayAudio(const std::string& audioFileName);
+	void sAnimation(float deltaTime);
+
+	//helper functions for the spawning of the in game entity types
+	std::shared_ptr<Entity> spawnPlayer(const vec2& position);
+	std::shared_ptr<Entity> spawnEnemy(const vec2& position);
+	std::shared_ptr<Entity> spawnBullet(const vec2& position, const vec2& velocity, int damage, float lifespanSeconds);
 
 	//getters
 	std::shared_ptr<Entity> getCurrentSelectedEntity();
@@ -34,9 +40,10 @@ public:
 	//setters
 	void setCurrentSelectedEntity(const std::shared_ptr<Entity>& newEntity);
 
-	void play() override;
+	//overrides
+	void play(float) override;
 	void sDoAction(const Action&) override;
-	void updateInternals() override;
+	void updateInternals(float) override;
 	void render() override;
 };
 

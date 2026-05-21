@@ -4,6 +4,7 @@
 #include<string>
 #include<unordered_map>
 #include<memory>
+#include<array>
 
 //this will contain all the things that is to be same across all the game scenes
 
@@ -28,13 +29,19 @@ public:
 	void start();
 	void quit();
 
-	const std::string& getCurrentSceneName() const;
-	SDL_Renderer* getRenderer() { return m_gameRenderer; }
-	void changeScene(const std::string&);
-	void addScene(const std::string& , std::shared_ptr<AbstractScene>);
+	const std::string&	getCurrentSceneName() const;
+	SDL_Renderer*		getRenderer() { return m_gameRenderer; }
+	void				changeScene(const std::string&);
+	void				addScene(const std::string& , std::shared_ptr<AbstractScene>);
 
 	//systems
 
 	void sUserInput();
+
+	std::array<int , 2> getWindowDimension(){
+		int w, h;
+		SDL_GetWindowSize(m_gameWindow, &w, &h);
+		return { w , h };
+	}
 
 };
