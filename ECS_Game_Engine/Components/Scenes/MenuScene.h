@@ -2,25 +2,46 @@
 #include"../../AbstractScene.h"
 
 
-//the menu scene has a task bar and then within each task bar there is a new array of options to choose from 
-//this can be done using either the mouse or the keyboard buttons
+/*
+	Very simple menu scene just for the purpose of having one
 
-//all the allowed keyboard buttons are up(w) , down(s) , left(a) , right(d) 
-//depending on the task bar or the options within the task bar where the control is 
-//they have different actions
-//eg in the task bar the left will choose the immediate left of the current option where the control is
-//		and then this will be different for the part where the option of changing the say sound left will decrece the sound
+	there are to be boxes that will lead to other scenes (other menu scenes or other gamePlay scene)
+	the boxes are interactable entities that have the component of menu box
+	this menu box component has some other pointer to some other scene maybe or some form of slider or some form of box boundary outline margin
+	that indicates that this box has been selected or something like that 
 
-//the mouse can click any anywhere on the screen and the control will latch on to that part of the screen
+	for the first menu scene this is just some simple stuffs like that of boxes that are arranged in a list and navigated using up down button
+	this boxes will be the levels and have level indicators in the form of a text on the box and 
+	selecting this box will make one go to the gameplay scene of that level or make the game engine display this gameplay scene
+
+	then this gameplay scene becomes the scene that the engine is playing
+
+	and when the player pushes some button that indicates exit then it goes back to the main menu scene
+
+	mechanics of the working
+
+	the boxes are arranged in terms of simple predefined rectangles with coordinates that are predefined
+	then there is one selector that the player is controlling this will move in terms of this dimension then select the boxes
+	the position of this selector is recorded in the state of the scene so that when the player comes back to this main menu it is in that place
+	then if the selector goes down below the most visible part of the window then the levels that are under comes up
+*/
 
 class MenuScene : public AbstractScene {
 private:
+	int			numberOfLevels;
+	std::shared_ptr<Entity> m_selectorEntity;
+	int m_selectedIndex{ 0 };
+
+	float m_startX{ 200.0f };
+	float m_startY{ 100.0f };
+	float m_padding{ 20.0f };
+	int m_rectHeight{ 0 };
 
 public:
 	MenuScene(const std::string_view);
 
-	void play() override;
-	void sDoAction(const Action&) override;
-	void updateInternals() override;
+	void play() override;					//this just starts the showing of this scene that is start the action update and render
+	void sDoAction(const Action&) override;	//each text box will contain the name of the scene that it will go to and not the actual scene pointer the game engine will handle the chainging of the current scene
+	void updateInternals() override;		//dynamically add new scenes update the position of the selector rectangle
 	void render() override;
 };

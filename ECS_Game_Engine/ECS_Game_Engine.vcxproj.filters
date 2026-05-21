@@ -49,6 +49,15 @@
     <ClCompile Include="Components\Scenes\MenuScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Components\Scenes\gamePlayScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eventBus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Systems\sInput.h">
@@ -85,9 +94,15 @@
     <ClInclude Include="Components\TexturesSpriteAnimation\cAnimation.h" />
     <ClInclude Include="Components\Scenes\MenuScene.h" />
     <ClInclude Include="Components\Action.h" />
+    <ClInclude Include="Components\cTextOutput.h" />
+    <ClInclude Include="Components\cLinkedScene.h" />
+    <ClInclude Include="Components\Scenes\gamePlayScene.h" />
+    <ClInclude Include="event.h" />
+    <ClInclude Include="eventBus.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />
+    <Text Include="Components\Scenes\menuSceneConfiguration.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\SDL3_image-devel-3.2.4-VC\SDL3_image-3.2.4\lib\x64\SDL3_image.dll" />

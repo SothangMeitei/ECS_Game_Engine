@@ -3,6 +3,7 @@
 #include"Components/TexturesSpriteAnimation/cAnimation.h"
 #include"Components/TexturesSpriteAnimation/cTexture.h"
 #include<unordered_map>
+#include"Components/Action.h"
 
 
 class GameEngine;
@@ -28,7 +29,7 @@ public:
 		m_actionMap[inputKey] = actionName;
 	}
 
-	const std::unordered_map<int, std::string>& getActionMap() const{
+	const std::unordered_map<int, std::string>& getActionMap() const {
 		return m_actionMap;
 	}
 

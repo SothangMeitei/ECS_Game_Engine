@@ -29,6 +29,7 @@ public:
 	void quit();
 
 	const std::string& getCurrentSceneName() const;
+	SDL_Renderer* getRenderer() { return m_gameRenderer; }
 	void changeScene(const std::string&);
 	void addScene(const std::string& , std::shared_ptr<AbstractScene>);
 

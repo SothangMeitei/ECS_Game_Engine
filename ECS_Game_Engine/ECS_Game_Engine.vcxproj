@@ -136,15 +136,20 @@
     <ClCompile Include="Components\vector.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
+    <ClCompile Include="event.cpp" />
+    <ClCompile Include="eventBus.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="GameEngine.cpp" />
+    <ClCompile Include="Components\Scenes\gamePlayScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Components\TexturesSpriteAnimation\cSprite.cpp" />
     <ClCompile Include="Components\TexturesSpriteAnimation\cTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractScene.h" />
+    <ClInclude Include="Components\cLinkedScene.h" />
     <ClInclude Include="Components\Action.h" />
+    <ClInclude Include="Components\cTextOutput.h" />
     <ClInclude Include="Components\Scenes\MenuScene.h" />
     <ClInclude Include="Components\TexturesSpriteAnimation\cAnimation.h" />
     <ClInclude Include="Components\cCollision.h" />
@@ -159,14 +164,18 @@
     <ClInclude Include="Components\cShape.h" />
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="ECS\EntityManager.h" />
+    <ClInclude Include="event.h" />
+    <ClInclude Include="eventBus.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="GameEngine.h" />
     <ClInclude Include="Components\TexturesSpriteAnimation\cSprite.h" />
+    <ClInclude Include="Components\Scenes\gamePlayScene.h" />
     <ClInclude Include="Systems\sInput.h" />
     <ClInclude Include="Systems\sRender.h" />
     <ClInclude Include="Components\TexturesSpriteAnimation\cTexture.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="Components\Scenes\menuSceneConfiguration.txt" />
     <Text Include="config.txt" />
   </ItemGroup>
   <ItemGroup>

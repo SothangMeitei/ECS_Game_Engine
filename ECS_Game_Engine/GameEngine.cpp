@@ -41,8 +41,6 @@ void GameEngine::start() {
 }
 void GameEngine::quit(){m_isRunning = false;}
 
-
-
 void GameEngine::addScene(const std::string& newSceneName , std::shared_ptr<AbstractScene> scene){
 	m_mapSceneNameToSceneObject[newSceneName] = scene;
 }
