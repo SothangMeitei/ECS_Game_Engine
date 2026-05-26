@@ -1,5 +1,6 @@
 #include "gamePlayScene.h"
 #include"../../GameEngine.h"
+#include"../../QuadTree/QuadTree.h"
 
 gamePlayScene::gamePlayScene(const std::string& configFile) {
     // --- KEY DOWN ACTIONS (START) ---
@@ -84,12 +85,37 @@ gamePlayScene::gamePlayScene(const std::string& configFile) {
 void gamePlayScene::sCollision() {
     auto entities = m_manager.getEntities();
 
+    //at the start of each of the frame construct the quad tree
+    const std::array<int, 2> currentWindowWidthHeight{ m_gameEngineOwnerBackPointer->getWindowDimension() };
+
+    QuadTree collisionTree(0
+        , AABB_Bounds{ 0, 0, static_cast<float>(currentWindowWidthHeight[0]) , static_cast<float>(currentWindowWidthHeight[1]) });
+
+    //insert every entity into the tree , this will construct the quad tree to with all the nodes , to the leaf
+    for (auto& e : entities) {
+        if (e->m_Collider && e->m_Transform) {
+            collisionTree.insert(e);
+        }
+    }
+
+    //Resolve Collisions , poll for each entity , the nearby entities and then
+    //run n ^ n time algorithm on all the pair of entities with in this bound of this current quad and resolve the collision
     for (auto& e1 : entities) {
         if (!e1->m_Collider || !e1->m_Transform || !e1->m_Velocity) continue;
 
-        for (auto& e2 : entities) {
-            // Standard filters
-            if (!e2->m_Collider || e1 == e2 || !e2->m_Transform) continue;
+        AABB_Bounds searchBounds = {
+            e1->m_Transform->position.get_x(),
+            e1->m_Transform->position.get_y(),
+            (float)e1->m_Collider->w,
+            (float)e1->m_Collider->h
+        };
+
+        // Get ONLY the entities in the same quadrants
+        std::vector<std::shared_ptr<Entity>> nearbyEntities;
+        collisionTree.retrieve(nearbyEntities, searchBounds);
+
+        for (auto& e2 : nearbyEntities) {
+            if (e1 == e2 || !e2->m_Collider || !e2->m_Transform) continue;
 
             std::shared_ptr<cCollision> e1Collider = e1->m_Collider;
             std::shared_ptr<cCollision> e2Collider = e2->m_Collider;
@@ -108,7 +134,8 @@ void gamePlayScene::sCollision() {
             float abs_dx = std::abs(dx);
             float abs_dy = std::abs(dy);
 
-            // 4. Calculate the minimum distance needed to NOT be colliding
+            // 4. Calculate the minimum distance needed to NOT be colliding 
+            // , ei the seperation of the widhts and the heigths of the two boxes
             float min_dist_x = (e1Collider->w / 2.0f) + (e2Collider->w / 2.0f);
             float min_dist_y = (e1Collider->h / 2.0f) + (e2Collider->h / 2.0f);
 
@@ -121,9 +148,7 @@ void gamePlayScene::sCollision() {
             // If either overlap is 0 or less, skip.
             if (overlapX <= 0 || overlapY <= 0) continue;
 
-            // COLLISION DETECTED!
-
-            // Resolve on the axis of LEAST penetration
+            //collision happened , now resolve the collision
             if (overlapX < overlapY) {
                 if (dx > 0) {
                     e1->m_Transform->position.set_x(e1->m_Transform->position.get_x() + overlapX);
@@ -132,7 +157,6 @@ void gamePlayScene::sCollision() {
                     e1->m_Transform->position.set_x(e1->m_Transform->position.get_x() - overlapX);
                 }
                 e1->m_Velocity->velocity.set_x(0);
-
             }
             else {
                 if (dy > 0) {
