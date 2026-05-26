@@ -2,7 +2,6 @@
 #include"../../GameEngine.h"
 
 gamePlayScene::gamePlayScene(const std::string& configFile) {
-
     // --- KEY DOWN ACTIONS (START) ---
     m_startAction["up"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
@@ -81,26 +80,72 @@ gamePlayScene::gamePlayScene(const std::string& configFile) {
 }
 
 
-
-
-
 //systems
-void gamePlayScene::sCollision(){
-	//for all the entities that have a collider component do the collision resolution here
-	//this is for the resolution of the collision only and not the physics which will be concerning with the 
-	//velocities and positions and acceleration and stuffs that is not related to collision and thus this collision will be
-	//some form of subpart of physics that is to be specialized for the purpose of it being so important
-	auto entities = m_manager.getEntities();
-	for (auto& e1 : entities) {
-        if (!e1->m_Collider) continue;
+void gamePlayScene::sCollision() {
+    auto entities = m_manager.getEntities();
+
+    for (auto& e1 : entities) {
+        if (!e1->m_Collider || !e1->m_Transform || !e1->m_Velocity) continue;
+
         for (auto& e2 : entities) {
-            //O(n^2) time very heavy and clunky , need to implement the quad tree data structure
-            //make it in the performant array stucture for the cache friendly nature
-            
+            // Standard filters
+            if (!e2->m_Collider || e1 == e2 || !e2->m_Transform) continue;
+
+            std::shared_ptr<cCollision> e1Collider = e1->m_Collider;
+            std::shared_ptr<cCollision> e2Collider = e2->m_Collider;
+
+            // 1. Calculate the exact center points
+            float c1x = e1->m_Transform->position.get_x() + (e1Collider->w / 2.0f);
+            float c1y = e1->m_Transform->position.get_y() + (e1Collider->h / 2.0f);
+            float c2x = e2->m_Transform->position.get_x() + (e2Collider->w / 2.0f);
+            float c2y = e2->m_Transform->position.get_y() + (e2Collider->h / 2.0f);
+
+            // 2. Calculate the distance between centers (The Vector from e2 to e1)
+            float dx = c1x - c2x;
+            float dy = c1y - c2y;
+
+            // 3. Calculate the absolute distance
+            float abs_dx = std::abs(dx);
+            float abs_dy = std::abs(dy);
+
+            // 4. Calculate the minimum distance needed to NOT be colliding
+            float min_dist_x = (e1Collider->w / 2.0f) + (e2Collider->w / 2.0f);
+            float min_dist_y = (e1Collider->h / 2.0f) + (e2Collider->h / 2.0f);
+
+            // 5. Calculate Penetration Depth (Overlap)
+            // If overlap is negative, they are separated.
+            float overlapX = min_dist_x - abs_dx;
+            float overlapY = min_dist_y - abs_dy;
+
+            // Overlap must exist on BOTH axes to be a collision. 
+            // If either overlap is 0 or less, skip.
+            if (overlapX <= 0 || overlapY <= 0) continue;
+
+            // COLLISION DETECTED!
+
+            // Resolve on the axis of LEAST penetration
+            if (overlapX < overlapY) {
+                if (dx > 0) {
+                    e1->m_Transform->position.set_x(e1->m_Transform->position.get_x() + overlapX);
+                }
+                else {
+                    e1->m_Transform->position.set_x(e1->m_Transform->position.get_x() - overlapX);
+                }
+                e1->m_Velocity->velocity.set_x(0);
+
+            }
+            else {
+                if (dy > 0) {
+                    e1->m_Transform->position.set_y(e1->m_Transform->position.get_y() + overlapY);
+                }
+                else {
+                    e1->m_Transform->position.set_y(e1->m_Transform->position.get_y() - overlapY);
+                }
+                e1->m_Velocity->velocity.set_y(0);
+            }
         }
-	}
+    }
 }
-void bindEntitesToScreen(int width , int heigth){}
 void gamePlayScene::sPhysics(){}
 
 void gamePlayScene::sMovement(){
@@ -130,12 +175,7 @@ void gamePlayScene::sAnimation(float deltaTime) {   //delta time is the time tak
     }
 }
 
-
-
-//helper functions for the spawning of the different entity types in the game
-// -----------------------------------------------------------------
-// SPAWN: PLAYER
-// -----------------------------------------------------------------
+//spawning functions
 std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const vec2& position) {
     auto player = m_manager.addEntity("Player");
 
@@ -146,15 +186,11 @@ std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const vec2& position) {
     player->m_Shape         = std::make_shared<cShape>(64, 64, 0, 0, 255, 4);
     player->m_Collider      = std::make_shared<cCollision>(64 , 64);
     player->m_Animation     = std::make_shared<cAnimation>("mainPlayerTexture");
-    player->m_LifeSpan      = nullptr; 
+    player->m_LifeSpan      = nullptr;
     player->m_TextOutput    = nullptr;
 
     return player;
 }
-
-// -----------------------------------------------------------------
-// SPAWN: ENEMY
-// -----------------------------------------------------------------
 std::shared_ptr<Entity> gamePlayScene::spawnEnemy(const vec2& position) {
     auto enemy = m_manager.addEntity("Enemy");
 
@@ -169,10 +205,6 @@ std::shared_ptr<Entity> gamePlayScene::spawnEnemy(const vec2& position) {
 
     return enemy;
 }
-
-// -----------------------------------------------------------------
-// SPAWN: BULLET
-// -----------------------------------------------------------------
 std::shared_ptr<Entity> gamePlayScene::spawnBullet(const vec2& position, const vec2& velocity, int damage, float lifespanSeconds) {
     auto bullet = m_manager.addEntity("Bullet");
 
@@ -187,7 +219,6 @@ std::shared_ptr<Entity> gamePlayScene::spawnBullet(const vec2& position, const v
     return bullet;
 }
 
-
 //getters
 std::shared_ptr<Entity> gamePlayScene::getCurrentSelectedEntity() {
 	return m_currentSelectedEntity;
@@ -199,8 +230,6 @@ std::unordered_map<std::string, std::function<void()>>& gamePlayScene::getAction
 void gamePlayScene::setCurrentSelectedEntity(const std::shared_ptr<Entity>& newEntity){
 	m_currentSelectedEntity = newEntity;
 }
-
-
 
 
 //overrides

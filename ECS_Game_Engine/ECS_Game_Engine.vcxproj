@@ -135,8 +135,6 @@
     <ClCompile Include="Components\vector.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
-    <ClCompile Include="event.cpp" />
-    <ClCompile Include="eventBus.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="Components\Scenes\gamePlayScene.cpp" />
