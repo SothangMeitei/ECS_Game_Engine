@@ -43,6 +43,9 @@
     <ClCompile Include="Components\Scenes\gamePlayScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Systems\sInput.h">
@@ -85,6 +88,7 @@
     <ClInclude Include="eventBus.h" />
     <ClInclude Include="Components\cHealth.h" />
     <ClInclude Include="Components\TexturesSpriteAnimation\AssetManager.h" />
+    <ClInclude Include="Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />

@@ -1,24 +1,45 @@
 #include "gamePlayScene.h"
 #include"../../GameEngine.h"
 #include"../../QuadTree/QuadTree.h"
+#include<random>
 
-gamePlayScene::gamePlayScene(const std::string& configFile) {
+inline int random(int start , int end) {
+    static std::random_device rd;
+
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(start, end);
+
+    return distr(gen);
+}
+
+gamePlayScene::gamePlayScene(GameEngine* engine , const std::string& configFile) {
+    m_gameEngineOwnerBackPointer = engine;
+    //register all the action requried in this engine
+    registerAction(SDL_SCANCODE_W, "up");
+    registerAction(SDL_SCANCODE_S, "down");
+    registerAction(SDL_SCANCODE_A, "left");
+    registerAction(SDL_SCANCODE_D, "right");
+
     // --- KEY DOWN ACTIONS (START) ---
     m_startAction["up"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
             m_currentSelectedEntity->m_Input->up = true;
+        SDL_Log("UP UP UP UP UP UP movement done , Character w pressed\n");
         };
     m_startAction["down"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
             m_currentSelectedEntity->m_Input->down = true;
+        SDL_Log("DOWN DOWN DOWN DOWN movement done , Character s pressed\n");
         };
     m_startAction["left"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
             m_currentSelectedEntity->m_Input->left = true;
+        SDL_Log("LEFT LEFT LEFT LEFT movement done , Character a pressed\n");
         };
     m_startAction["right"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
             m_currentSelectedEntity->m_Input->right = true;
+        SDL_Log("RIGHT RIGHT RIGHT RIGHT movement done , Character f pressed\n");
         };
 
     // Toggle is a discrete action. It only happens on key DOWN.
@@ -44,6 +65,8 @@ gamePlayScene::gamePlayScene(const std::string& configFile) {
             m_currentSelectedEntity->m_Input->right = false;
         };
 
+
+
     //functions for the internal event bus event resolution 
     //for the damage to entity
     m_internalEventBus.subscribe(eventTypes::damageEvent, [this](const event* e) {
@@ -68,16 +91,31 @@ gamePlayScene::gamePlayScene(const std::string& configFile) {
     m_internalEventBus.subscribe(eventTypes::spawnEntityEvent, [this](const event* e) {
         const SpawnEntityEvent* event = dynamic_cast<const SpawnEntityEvent*>(e);
         //create an entity from this event and then push it to the entities vector
-        std::shared_ptr<Entity> newEntity = m_manager.addEntity(event->type);
+        std::shared_ptr<Entity> newEntity = m_manager.addEntity(event->type);   //this type is for the type of entity that is specified in the event e
         });
+
+
+
+
+
+    //load up the assets
+    m_assetManager.addTexture("mainPlayerTexture" , "./GameAssets/sprite_image.bmp", m_gameEngineOwnerBackPointer->getRenderer());
 
 
     //spawn the in game entities for the first time the player enters the scene
     //populate the current scene
     
-    //std::array<int, 2> windowDimension{ m_gameEngineOwnerBackPointer->getWindowDimension() };
-    //spawnPlayer(vec2(windowDimension[0] / 2 , windowDimension[1] / 2));
-    //spawnEnemy(vec2(windowDimension[0], windowDimension[1]));
+    auto p1 = spawnPlayer({ 100.0f, 100.0f });
+    m_currentSelectedEntity = p1;
+    m_Camera.setTarget(m_currentSelectedEntity);
+    //for (int i = 0; i < 10; ++i) {
+    //    spawnEnemy(vec2(random(0 , windowDimension[1]) , random(0 , windowDimension[1])));  //spawn 10 enemies randomly in bounded by the current screen
+    //}
+    p1->m_Animation->states["Running Up"]       = { 8 , 100 , { 0, 2432, 64, 64 } };
+    p1->m_Animation->states["Running Left"]     = { 8 , 100 , { 0, 2496, 64, 64 } };
+    p1->m_Animation->states["Running Down"]    = { 8 , 100 , { 0, 2560, 64, 64 } };
+    p1->m_Animation->states["Running Right"]     = { 8 , 100 , { 0, 2624, 64, 64 } };
+    p1->m_Animation->changeState("Running Up");
 }
 
 
@@ -171,12 +209,46 @@ void gamePlayScene::sCollision() {
     }
 }
 void gamePlayScene::sPhysics(){}
+void gamePlayScene::sInput() {
+    auto& entities{ m_manager.getEntities() };
+
+    for (auto& e : entities) {
+        if (e->m_Input) {
+            //so this is for the input resolution of the entity
+            //this is for all the input resolution of the game
+            auto inputComponent{ e->m_Input };
+
+            e->m_Velocity->velocity.set_x(0.0f);
+            e->m_Velocity->velocity.set_y(0.0f);
+
+            if (inputComponent->up) { 
+                e->m_Velocity->velocity.set_y(-e->m_Velocity->speed);
+                e->m_Animation->changeState("Running Up");
+            }
+            if (inputComponent->down) { 
+                e->m_Velocity->velocity.set_y(e->m_Velocity->speed); 
+                e->m_Animation->currentAnimName = "Running Down";
+            }
+            if (inputComponent->right) { 
+                e->m_Velocity->velocity.set_x(e->m_Velocity->speed); 
+                e->m_Animation->currentAnimName = "Running Right";
+            }
+            if (inputComponent->left) { 
+                e->m_Velocity->velocity.set_x(-e->m_Velocity->speed); 
+                e->m_Animation->currentAnimName = "Running Left";
+            }
+        }
+    }
+}
 
 void gamePlayScene::sMovement(){
     auto& entities = m_manager.getEntities();
     for (auto& e : entities) {
         if (e->m_Transform && e->m_Velocity) {
             e->m_Transform->position += e->m_Velocity->velocity;
+        }
+        if (e->m_Transform && e->m_Velocity && e->m_Input) {
+            if ((e->m_Input->up)) {}
         }
     }
 }
@@ -201,10 +273,10 @@ void gamePlayScene::sAnimation(float deltaTime) {   //delta time is the time tak
 
 //spawning functions
 std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const vec2& position) {
-    auto player = m_manager.addEntity("Player");
+    auto player = m_manager.addEntity("Player");    //input taken by the addEntity is the type of the entity that is added
 
     player->m_Transform     = std::make_shared<cTransform>(position, 1.0f, 0.0f);
-    player->m_Velocity      = std::make_shared<cVelocity>(vec2(0.0f, 0.0f));
+    player->m_Velocity      = std::make_shared<cVelocity>(vec2(0.0f, 0.0f) , 0.1);
     player->m_Input         = std::make_shared<cInput>();
     player->m_Health        = std::make_shared<cHealth>(100);
     player->m_Shape         = std::make_shared<cShape>(64, 64, 0, 0, 255, 4);
@@ -255,7 +327,6 @@ void gamePlayScene::setCurrentSelectedEntity(const std::shared_ptr<Entity>& newE
 	m_currentSelectedEntity = newEntity;
 }
 
-
 //overrides
 void gamePlayScene::sDoAction(const Action& action) {
 	const std::string& name{ action.get_name() };
@@ -274,12 +345,20 @@ void gamePlayScene::sDoAction(const Action& action) {
 	}
 }
 void gamePlayScene::updateInternals(float deltaTime) {
+    m_manager.update();
+    sInput();
 	sMovement();
 	sCollision();
 	sPhysics();
     sAnimation(deltaTime);
+    m_internalEventBus.resolveEventsFromEventQueue();
 }
 void gamePlayScene::render() {
+    SDL_Renderer* renderer = m_gameEngineOwnerBackPointer->getRenderer();
+
+    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+    SDL_RenderClear(renderer);
+
     for (auto& entity : m_manager.getEntities()) {
         if (entity->m_Transform && entity->m_Animation) {
             auto& anim = entity->m_Animation;
@@ -295,7 +374,12 @@ void gamePlayScene::render() {
 
             SDL_RenderTexture(m_gameEngineOwnerBackPointer->getRenderer(), tex, &sourceRect, &destRect);
         }
+        if (entity->m_Transform && !entity->m_Animation && entity->m_Shape) {
+            //render the shape of the entity
+
+        }
     }
+    SDL_RenderPresent(renderer);
 }
 void gamePlayScene::play(float deltaTime) {
 	updateInternals(deltaTime);

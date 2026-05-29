@@ -1,16 +1,18 @@
 #pragma once
 #include"../../AbstractScene.h"
 #include<functional>
+#include"../../Camera.h"
 
 class gamePlayScene: public AbstractScene
 {
 private:
 	std::shared_ptr<Entity> m_currentSelectedEntity;
+	Camera					m_Camera;
 	std::unordered_map<std::string, std::function<void()>> m_startAction;
 	std::unordered_map<std::string, std::function<void()>> m_endAction;
 	
 public:
-	gamePlayScene(const std::string& configFile);
+	gamePlayScene(GameEngine* engine , const std::string& configFile);
 
 	enum class entityType {
 		player,
@@ -25,6 +27,7 @@ public:
 	//systems
 	void sCollision();
 	void sPhysics();
+	void sInput();
 	void sMovement();
 	void sPlayAudio(const std::string& audioFileName);
 	void sAnimation(float deltaTime);

@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Components\Scenes\MenuScene.cpp" />
     <ClCompile Include="Components\vector.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
@@ -142,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractScene.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Components\cHealth.h" />
     <ClInclude Include="Components\cLinkedScene.h" />
     <ClInclude Include="Components\Action.h" />

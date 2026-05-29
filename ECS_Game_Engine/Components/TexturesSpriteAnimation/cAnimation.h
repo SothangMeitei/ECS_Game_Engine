@@ -3,9 +3,9 @@
 #include <SDL3/SDL.h>
 
 struct AnimState {
-    int frameCount;
-    float frameDuration;
-    SDL_FRect startRect;
+    int         frameCount;
+    float       frameDuration;
+    SDL_FRect   startRect;
 };
 
 struct cAnimation {

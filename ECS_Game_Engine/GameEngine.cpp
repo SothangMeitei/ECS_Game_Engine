@@ -3,24 +3,18 @@
 #include"AbstractScene.h"
 #include"Components/Action.h"
 
-GameEngine::GameEngine(){
-	if (!SDL_Init(SDL_INIT_VIDEO)) {
-		SDL_Log("Faliure to initialize the video subsystem %s", SDL_GetError());
-		m_isRunning = false;
-	}
-	if (!SDL_Init(SDL_INIT_AUDIO)) {
-		SDL_Log("Faliure to initialize the audio subsystem %s", SDL_GetError());
-		m_isRunning = false;
-	}
-	m_gameWindow = SDL_CreateWindow("Window", 900, 400, SDL_WINDOW_RESIZABLE);
-	if (!m_gameWindow) {
-		SDL_Log("Faliur to initialize the window using SDL\n");
+GameEngine::GameEngine() {
+	m_isRunning = true;
+	m_paused = false;
+
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+		SDL_Log("Failure to initialize SDL subsystems: %s", SDL_GetError());
 		m_isRunning = false;
 		return;
 	}
-	m_gameRenderer = SDL_CreateRenderer(m_gameWindow, nullptr);
-	if (!m_gameRenderer) {
-		SDL_Log("Faliur to initialize the renderer\n");
+
+	if (!SDL_CreateWindowAndRenderer("Window", 900, 400, SDL_WINDOW_RESIZABLE, &m_gameWindow, &m_gameRenderer)) {
+		SDL_Log("Failure to create window and renderer: %s", SDL_GetError());
 		m_isRunning = false;
 		return;
 	}
@@ -36,7 +30,10 @@ void GameEngine::paused() { m_paused = !m_paused; }
 void GameEngine::start() { 
 	while (m_isRunning) {
 		sUserInput();
-		m_mapSceneNameToSceneObject[getCurrentSceneName()]->play(1);
+		auto currentScene = m_mapSceneNameToSceneObject[getCurrentSceneName()];
+		if (currentScene) {
+			currentScene->play(1);
+		}
 	}
 }
 void GameEngine::quit(){m_isRunning = false;}
@@ -59,13 +56,15 @@ void GameEngine::sUserInput() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		//try handelingg all the window closing and the pausing information right here
-
+		if (event.type == SDL_EVENT_QUIT) {
+			quit();
+		}
 		if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
 			std::string actionType{ (event.type == SDL_EVENT_KEY_DOWN) ? "START" : "END" };
 
 			auto& currentScene = m_mapSceneNameToSceneObject[getCurrentSceneName()];
 			auto& currentSceneInputMap{ currentScene->getActionMap() };
-			int currentKey = event.key.key;
+			int currentKey = event.key.scancode;
 
 			// if this current scene has a mapping for this current key press
 			//create the action for this and then sent to the current scene
