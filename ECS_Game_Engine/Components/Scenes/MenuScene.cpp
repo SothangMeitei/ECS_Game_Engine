@@ -4,7 +4,8 @@
 #include "MenuScene.h"
 #include"../../GameEngine.h"
 
-MenuScene::MenuScene(const std::string_view pathConfigurationFile) {
+MenuScene::MenuScene(GameEngine* engineBackPointer , const std::string_view pathConfigurationFile) {
+    m_gameEngineOwnerBackPointer = engineBackPointer;
 
     std::ifstream configFile{ std::string(pathConfigurationFile) };
 
@@ -121,9 +122,14 @@ void MenuScene::sDoAction(const Action& action) {
             const auto& boxes = m_manager.getEntities("LevelBox");
 
             if (m_selectedIndex < boxes.size()) {
-                //here due to the entities being pushed into the entites vector in order the entitie's ordering and their index are the same
-                std::string targetScene = boxes[m_selectedIndex]->m_LinkScene->name_of_scene_link;       
-                m_gameEngineOwnerBackPointer->changeScene(targetScene);
+                std::string targetScene = boxes[m_selectedIndex]->m_LinkScene->name_of_scene_link;
+
+                if (m_gameEngineOwnerBackPointer->hasScene(targetScene)) {
+                    m_gameEngineOwnerBackPointer->changeScene(targetScene);
+                }
+                else {
+                    SDL_Log("ERROR: Tried to load scene '%s', but it does not exist in the engine!", targetScene.c_str());
+                }
             }
         }
     }
@@ -135,11 +141,15 @@ void MenuScene::updateInternals(float deltaTime) {
     float targetY = m_startY + (m_selectedIndex * (m_rectHeight + m_padding));
 
     // Directly update the cached selector's transform
-    m_selectorEntity->m_Transform->position.y = targetY;
+    m_selectorEntity->m_Transform->position.set_y(targetY);
 }
 
 void MenuScene::render() {
     SDL_Renderer* renderer = m_gameEngineOwnerBackPointer->getRenderer();
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
     for (const auto& entity : m_manager.getEntities()) {
 
         if (entity->m_Transform && entity->m_Shape) {
@@ -169,4 +179,6 @@ void MenuScene::render() {
             // Draw text at entity->m_Transform->position using entity->m_TextOutput->text
         }
     }
+
+    SDL_RenderPresent(renderer);
 }

@@ -29,6 +29,7 @@ public:
 	void start();
 	void quit();
 
+	bool				hasScene(const std::string&) const;
 	const std::string&	getCurrentSceneName() const;
 	SDL_Renderer*		getRenderer() { return m_gameRenderer; }
 	void				changeScene(const std::string&);

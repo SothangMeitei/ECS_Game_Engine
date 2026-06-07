@@ -2,8 +2,7 @@ skip the first four lines of meta data delimiter is #
 #no. of levels#width of the selector rectangle#height of the selector rectangle
 #text displayed #name of the scene to go to //this is the box information
 #text displayed #name of the scene to go to
-#4#500#50
-#level 1#level_1
-#level 2#level_2
-#level 3#level_3
-#level 4#level_4
+#3#300#50
+#Level 1 - The Beginning#Play
+#Level 2 - The Forest#Play
+#Level 3 - The Dungeon#Play

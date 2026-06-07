@@ -38,7 +38,7 @@ private:
 	int m_rectHeight{ 0 };
 
 public:
-	MenuScene(const std::string_view);
+	MenuScene(GameEngine* , const std::string_view);
 
 	void play(float) override;					//this just starts the showing of this scene that is start the action update and render
 	void sDoAction(const Action&) override;	//each text box will contain the name of the scene that it will go to and not the actual scene pointer the game engine will handle the chainging of the current scene

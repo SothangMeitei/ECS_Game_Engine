@@ -13,16 +13,20 @@
 #include "game.h"
 #include "GameEngine.h"
 #include "Components/Scenes/gamePlayScene.h"
+#include "Components/Scenes/MenuScene.h"
 
 int main(int argc, char* argv[]) {
-    GameEngine gameEngine1;
+    GameEngine gameEngine;
 
-    // Pass the memory address of the engine into the scene constructor!
-    std::shared_ptr<gamePlayScene> myScene = std::make_shared<gamePlayScene>(&gameEngine1, "config.txt");
+    auto playScene = std::make_shared<gamePlayScene>(&gameEngine, "config.txt");
+    auto menuScene = std::make_shared<MenuScene>(&gameEngine, "./Components/Scenes/menuSceneConfiguration.txt");
 
-    gameEngine1.addScene("Play", myScene);
-    gameEngine1.changeScene("Play");
-    gameEngine1.start();
+    gameEngine.addScene("Play", playScene);
+    gameEngine.addScene("Menu", menuScene);
+
+    gameEngine.changeScene("Menu");
+
+    gameEngine.start();
 
     return 0;
 }

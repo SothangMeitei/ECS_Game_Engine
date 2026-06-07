@@ -44,6 +44,9 @@ void GameEngine::addScene(const std::string& newSceneName , std::shared_ptr<Abst
 const std::string& GameEngine::getCurrentSceneName() const {
 	return m_currentSceneName;
 }
+bool GameEngine::hasScene(const std::string& sceneName) const {
+	return m_mapSceneNameToSceneObject.find(sceneName) != m_mapSceneNameToSceneObject.end();
+}
 void GameEngine::changeScene(const std::string& newSceneName) {
 	m_currentSceneName = newSceneName;
 }

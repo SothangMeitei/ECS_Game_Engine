@@ -20,10 +20,13 @@ gamePlayScene::gamePlayScene(GameEngine* engine , const std::string& configFile)
     registerAction(SDL_SCANCODE_A, "left");
     registerAction(SDL_SCANCODE_D, "right");
 
+    registerAction(SDL_SCANCODE_ESCAPE, "quit_to_main_menu");
+
     // --- KEY DOWN ACTIONS (START) ---
     m_startAction["up"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
             m_currentSelectedEntity->m_Input->up = true;
+            
         SDL_Log("UP UP UP UP UP UP movement done , Character w pressed\n");
         };
     m_startAction["down"] = [this]() {
@@ -46,7 +49,16 @@ gamePlayScene::gamePlayScene(GameEngine* engine , const std::string& configFile)
     m_startAction["toggle"] = [this]() {
         // Logic to cycle m_currentSelectedEntity to the next entity
         };
+    m_startAction["quit_to_main_menu"] = [this]() {
+        SDL_Log("Escape pressed. Returning to Menu.");
 
+        // Use the back-pointer to tell the engine to swap the active scene
+        if (m_gameEngineOwnerBackPointer) {
+            // NOTE: Make sure the string "Menu" exactly matches the string 
+            // you used in main.cpp when calling gameEngine1.addScene("Menu", menuScene);
+            m_gameEngineOwnerBackPointer->changeScene("Menu");
+        }
+        };
     // --- KEY UP ACTIONS (END) ---
     m_endAction["up"] = [this]() {
         if (m_currentSelectedEntity && m_currentSelectedEntity->m_Input)
@@ -111,11 +123,22 @@ gamePlayScene::gamePlayScene(GameEngine* engine , const std::string& configFile)
     //for (int i = 0; i < 10; ++i) {
     //    spawnEnemy(vec2(random(0 , windowDimension[1]) , random(0 , windowDimension[1])));  //spawn 10 enemies randomly in bounded by the current screen
     //}
-    p1->m_Animation->states["Running Up"]       = { 8 , 100 , { 0, 2432, 64, 64 } };
-    p1->m_Animation->states["Running Left"]     = { 8 , 100 , { 0, 2496, 64, 64 } };
-    p1->m_Animation->states["Running Down"]    = { 8 , 100 , { 0, 2560, 64, 64 } };
-    p1->m_Animation->states["Running Right"]     = { 8 , 100 , { 0, 2624, 64, 64 } };
-    p1->m_Animation->changeState("Running Up");
+    p1->m_Animation->states["Running Up"]       = { 8 , 50 , { 0, 2432, 64, 64 } };
+    p1->m_Animation->states["Running Left"]     = { 8 , 50 , { 0, 2496, 64, 64 } };
+    p1->m_Animation->states["Running Down"]    = { 8 , 50 , { 0, 2560, 64, 64 } };
+    p1->m_Animation->states["Running Right"]     = { 8 , 50 , { 0, 2624, 64, 64 } };
+
+    p1->m_Animation->states["Idle Up"] = { 8 , 100 , { 0, 256, 64, 64 } };
+    p1->m_Animation->states["Idle Left"] = { 8 , 100 , { 0, 320, 64, 64 } };
+    p1->m_Animation->states["Idle Down"] = { 8 , 100 , { 0, 384, 64, 64 } };
+    p1->m_Animation->states["Idle Right"] = { 8 , 100 , { 0, 448, 64, 64 } };
+
+    p1->m_Animation->changeState("Idle Down");
+
+
+    spawnEnemy({400 , 400});
+    spawnEnemy({500 , 500});
+    spawnEnemy({200 , 200});
 }
 
 
@@ -221,6 +244,7 @@ void gamePlayScene::sInput() {
             e->m_Velocity->velocity.set_x(0.0f);
             e->m_Velocity->velocity.set_y(0.0f);
 
+
             if (inputComponent->up) { 
                 e->m_Velocity->velocity.set_y(-e->m_Velocity->speed);
                 e->m_Animation->changeState("Running Up");
@@ -233,7 +257,7 @@ void gamePlayScene::sInput() {
                 e->m_Velocity->velocity.set_x(e->m_Velocity->speed); 
                 e->m_Animation->currentAnimName = "Running Right";
             }
-            if (inputComponent->left) { 
+            if (inputComponent->left) {
                 e->m_Velocity->velocity.set_x(-e->m_Velocity->speed); 
                 e->m_Animation->currentAnimName = "Running Left";
             }
@@ -241,17 +265,45 @@ void gamePlayScene::sInput() {
     }
 }
 
-void gamePlayScene::sMovement(){
+void gamePlayScene::sMovement() {
     auto& entities = m_manager.getEntities();
+
     for (auto& e : entities) {
+
+        // 1. Apply physical movement
         if (e->m_Transform && e->m_Velocity) {
             e->m_Transform->position += e->m_Velocity->velocity;
         }
-        if (e->m_Transform && e->m_Velocity && e->m_Input) {
-            if ((e->m_Input->up)) {}
+
+        // 2. Control the Animation State based on Velocity
+        if (e->m_Animation && e->m_Velocity) {
+            float vx = e->m_Velocity->velocity.get_x();
+            float vy = e->m_Velocity->velocity.get_y();
+
+            std::string currentAnim = e->m_Animation->currentAnimName;
+            std::string nextAnim = currentAnim;
+
+            // --- IS THE ENTITY MOVING? ---
+            if (vx > 0)      nextAnim = "Running Right";
+            else if (vx < 0) nextAnim = "Running Left";
+            else if (vy > 0) nextAnim = "Running Down";
+            else if (vy < 0) nextAnim = "Running Up";
+
+            // --- IS THE ENTITY STOPPED? ---
+            else {
+                // We use the LAST KNOWN running state to figure out which way to idle!
+                if (currentAnim == "Running Right") nextAnim = "Idle Right";
+                else if (currentAnim == "Running Left") nextAnim = "Idle Left";
+                else if (currentAnim == "Running Down") nextAnim = "Idle Down";
+                else if (currentAnim == "Running Up") nextAnim = "Idle Up";
+            }
+
+            // Apply the change safely!
+            e->m_Animation->changeState(nextAnim);
         }
     }
 }
+
 void gamePlayScene::sPlayAudio(const std::string& audioName){
     const std::string& path{ m_soundPaths[audioName] };
 
@@ -280,7 +332,7 @@ std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const vec2& position) {
     player->m_Input         = std::make_shared<cInput>();
     player->m_Health        = std::make_shared<cHealth>(100);
     player->m_Shape         = std::make_shared<cShape>(64, 64, 0, 0, 255, 4);
-    player->m_Collider      = std::make_shared<cCollision>(64 , 64);
+    player->m_Collider      = std::make_shared<cCollision>(40 , 40);
     player->m_Animation     = std::make_shared<cAnimation>("mainPlayerTexture");
     player->m_LifeSpan      = nullptr;
     player->m_TextOutput    = nullptr;
@@ -291,7 +343,7 @@ std::shared_ptr<Entity> gamePlayScene::spawnEnemy(const vec2& position) {
     auto enemy = m_manager.addEntity("Enemy");
 
     enemy->m_Transform      = std::make_shared<cTransform>(position, 1.0f, 0.0f);
-    enemy->m_Velocity       = std::make_shared<cVelocity>(vec2(0.0f, 0.0f));
+    enemy->m_Velocity       = std::make_shared<cVelocity>(vec2(0.0f, 0.0f) , 0.1f);
     enemy->m_Health         = std::make_shared<cHealth>(50);
     enemy->m_Shape          = std::make_shared<cShape>(64, 64, 255, 0, 0, 4);
     enemy->m_Collider       = std::make_shared<cCollision>(64, 64);
@@ -353,6 +405,22 @@ void gamePlayScene::updateInternals(float deltaTime) {
     sAnimation(deltaTime);
     m_internalEventBus.resolveEventsFromEventQueue();
 }
+
+//helper for the renderer system
+inline void drawPolygon(double centerX, double centerY, double radius, int vertices, double rotation, std::shared_ptr<cShape> shape , SDL_Renderer* m_renderer) {
+    std::vector<SDL_FPoint> points(vertices + 1);
+    float angleStep = (2.0f * 3.14159f) / vertices;
+
+    SDL_SetRenderDrawColor(m_renderer, shape->r, shape->g, shape->b, 255);
+    for (int i = 0; i <= vertices; ++i) {
+        // We add 'rotation' so the shape can spin
+        double currentAngle = i * angleStep + rotation;
+
+        points[i].x = centerX + radius * cosf(currentAngle);
+        points[i].y = centerY + radius * sinf(currentAngle);
+    }
+    SDL_RenderLines(m_renderer, points.data(), (int)points.size());
+}
 void gamePlayScene::render() {
     SDL_Renderer* renderer = m_gameEngineOwnerBackPointer->getRenderer();
 
@@ -374,9 +442,19 @@ void gamePlayScene::render() {
 
             SDL_RenderTexture(m_gameEngineOwnerBackPointer->getRenderer(), tex, &sourceRect, &destRect);
         }
-        if (entity->m_Transform && !entity->m_Animation && entity->m_Shape) {
+        if (entity->m_Transform && !entity->m_Animation && entity->m_Collider) {
             //render the shape of the entity
-
+            auto& collider = entity->m_Collider;
+            auto& position = entity->m_Transform->position;
+            drawPolygon(
+                position.get_x() + collider->w / 2,
+                position.get_y() + collider->h / 2,
+                collider->w / 2,
+                4,
+                95.0f,     //this rotation is in radiants
+                entity->m_Shape,
+                m_gameEngineOwnerBackPointer->getRenderer()
+            );
         }
     }
     SDL_RenderPresent(renderer);

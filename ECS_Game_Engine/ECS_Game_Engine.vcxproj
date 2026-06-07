@@ -131,7 +131,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Components\Scenes\MenuScene.cpp" />
     <ClCompile Include="Components\vector.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
