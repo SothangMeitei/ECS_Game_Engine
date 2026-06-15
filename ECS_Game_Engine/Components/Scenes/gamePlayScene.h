@@ -3,6 +3,7 @@
 #include<functional>
 #include"../../Camera.h"
 
+
 class gamePlayScene: public AbstractScene
 {
 private:
@@ -33,8 +34,8 @@ public:
 	void sAnimation(float deltaTime);
 
 	//helper functions for the spawning of the in game entity types
-	std::shared_ptr<Entity> spawnPlayer(const vec2& position);
-	std::shared_ptr<Entity> spawnEnemy(const vec2& position);
+	std::shared_ptr<Entity> spawnPlayer(const std::string&);
+	std::shared_ptr<Entity> spawnEnemy(const std::string&);
 	std::shared_ptr<Entity> spawnBullet(const vec2& position, const vec2& velocity, int damage, float lifespanSeconds);
 
 	//getters

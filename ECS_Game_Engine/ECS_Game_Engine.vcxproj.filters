@@ -93,5 +93,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\SDL3_image-devel-3.2.4-VC\SDL3_image-3.2.4\lib\x64\SDL3_image.dll" />
+    <None Include="packages.config" />
+    <None Include="GameAssets\Blueprints\player.json" />
+    <None Include="GameAssets\Blueprints\enemy.json" />
   </ItemGroup>
 </Project>

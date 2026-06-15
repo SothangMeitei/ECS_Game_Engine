@@ -1,0 +1,39 @@
+{
+  "EntityTag": "Enemy",
+  "Transform": {
+    "start_x": 500.0,
+    "start_y": 500.0
+  },
+  "Velocity": {
+    "speed": 0.5
+  },
+  "Health": {
+    "max": 100
+  },
+  "Animation": {
+    "textureID": "mainPlayerTexture",
+    "states": {
+      "Running Up": {
+        "frames": 8,
+        "duration": 100.0,
+        "rect": [ 0, 2432, 64, 64 ]
+      },
+      "Running Down": {
+        "frames": 8,
+        "duration": 100.0,
+        "rect": [ 0, 2496, 64, 64 ]
+      },
+      "Idle Up": {
+        "frames": 8,
+        "duration": 100.0,
+        "rect": [ 0, 256, 64, 64 ]
+      },
+      "Idle Down": {
+        "frames": 8,
+        "duration": 100.0,
+        "rect": [ 0, 320, 64, 64 ]
+      }
+    },
+    "defaultState": "Idle Down"
+  }
+}

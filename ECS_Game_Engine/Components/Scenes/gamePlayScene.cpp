@@ -2,6 +2,10 @@
 #include"../../GameEngine.h"
 #include"../../QuadTree/QuadTree.h"
 #include<random>
+#include<nlohmann/json.hpp>
+#include<fstream>
+
+using  json = nlohmann::json;
 
 inline int random(int start , int end) {
     static std::random_device rd;
@@ -117,28 +121,12 @@ gamePlayScene::gamePlayScene(GameEngine* engine , const std::string& configFile)
     //spawn the in game entities for the first time the player enters the scene
     //populate the current scene
     
-    auto p1 = spawnPlayer({ 100.0f, 100.0f });
+    auto p1 = spawnPlayer("./GameAssets/Blueprints/player.json");
     m_currentSelectedEntity = p1;
     m_Camera.setTarget(m_currentSelectedEntity);
     //for (int i = 0; i < 10; ++i) {
     //    spawnEnemy(vec2(random(0 , windowDimension[1]) , random(0 , windowDimension[1])));  //spawn 10 enemies randomly in bounded by the current screen
     //}
-    p1->m_Animation->states["Running Up"]       = { 8 , 50 , { 0, 2432, 64, 64 } };
-    p1->m_Animation->states["Running Left"]     = { 8 , 50 , { 0, 2496, 64, 64 } };
-    p1->m_Animation->states["Running Down"]    = { 8 , 50 , { 0, 2560, 64, 64 } };
-    p1->m_Animation->states["Running Right"]     = { 8 , 50 , { 0, 2624, 64, 64 } };
-
-    p1->m_Animation->states["Idle Up"] = { 8 , 100 , { 0, 256, 64, 64 } };
-    p1->m_Animation->states["Idle Left"] = { 8 , 100 , { 0, 320, 64, 64 } };
-    p1->m_Animation->states["Idle Down"] = { 8 , 100 , { 0, 384, 64, 64 } };
-    p1->m_Animation->states["Idle Right"] = { 8 , 100 , { 0, 448, 64, 64 } };
-
-    p1->m_Animation->changeState("Idle Down");
-
-
-    spawnEnemy({400 , 400});
-    spawnEnemy({500 , 500});
-    spawnEnemy({200 , 200});
 }
 
 
@@ -247,19 +235,15 @@ void gamePlayScene::sInput() {
 
             if (inputComponent->up) { 
                 e->m_Velocity->velocity.set_y(-e->m_Velocity->speed);
-                e->m_Animation->changeState("Running Up");
             }
             if (inputComponent->down) { 
                 e->m_Velocity->velocity.set_y(e->m_Velocity->speed); 
-                e->m_Animation->currentAnimName = "Running Down";
             }
             if (inputComponent->right) { 
                 e->m_Velocity->velocity.set_x(e->m_Velocity->speed); 
-                e->m_Animation->currentAnimName = "Running Right";
             }
             if (inputComponent->left) {
                 e->m_Velocity->velocity.set_x(-e->m_Velocity->speed); 
-                e->m_Animation->currentAnimName = "Running Left";
             }
         }
     }
@@ -324,25 +308,67 @@ void gamePlayScene::sAnimation(float deltaTime) {   //delta time is the time tak
 }
 
 //spawning functions
-std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const vec2& position) {
-    auto player = m_manager.addEntity("Player");    //input taken by the addEntity is the type of the entity that is added
+std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const std::string& blueprintPath) {
 
-    player->m_Transform     = std::make_shared<cTransform>(position, 1.0f, 0.0f);
-    player->m_Velocity      = std::make_shared<cVelocity>(vec2(0.0f, 0.0f) , 0.1);
-    player->m_Input         = std::make_shared<cInput>();
-    player->m_Health        = std::make_shared<cHealth>(100);
-    player->m_Shape         = std::make_shared<cShape>(64, 64, 0, 0, 255, 4);
-    player->m_Collider      = std::make_shared<cCollision>(40 , 40);
-    player->m_Animation     = std::make_shared<cAnimation>("mainPlayerTexture");
-    player->m_LifeSpan      = nullptr;
-    player->m_TextOutput    = nullptr;
+    // 1. Open the file and parse the JSON
+    std::ifstream file(blueprintPath);
+    if (!file.is_open()) {
+        SDL_Log("ERROR: Could not open blueprint: %s", blueprintPath.c_str());
+        return nullptr;
+    }
+
+    json data = json::parse(file);
+
+    // 2. Create the Entity using the tag from the JSON
+    auto player = m_manager.addEntity(data["EntityTag"]);
+    std::cout << " entity tag for the player: " << data["EntityTag"];
+    std::cout << "\n start x: " << data["Transform"]["start_x"];
+    std::cout << "\n start y: " << data["Transform"]["start_y"];
+    std::cout << "\n speed for the velocity of the player: " << data["Velocity"]["speed"];
+    // 3. Load Transform
+    float x = data["Transform"]["start_x"];
+    float y = data["Transform"]["start_y"];
+    player->m_Transform = std::make_shared<cTransform>(vec2(x, y), 1.0f, 0.0f);
+
+    // 4. Load Velocity & Health
+    float speed = data["Velocity"]["speed"];
+    player->m_Velocity = std::make_shared<cVelocity>(vec2(0.0f, 0.0f), speed);
+
+    int maxHealth = data["Health"]["max"];
+    player->m_Health = std::make_shared<cHealth>(maxHealth);
+
+    // 5. Build the other static components
+    player->m_Input = std::make_shared<cInput>();
+    player->m_Shape = std::make_shared<cShape>(64, 64, 0, 0, 255, 4);
+    player->m_Collider = std::make_shared<cCollision>(64, 64);
+
+    // PART 6: The Magic - Loading Animations Dynamically!
+
+    std::string texID = data["Animation"]["textureID"];
+    player->m_Animation = std::make_shared<cAnimation>(texID);
+
+    // We can loop through the "states" dictionary directly!
+    for (auto& [stateName, stateData] : data["Animation"]["states"].items()) {
+
+        int frames = stateData["frames"];
+        float duration = stateData["duration"];
+
+        // Grab the array of 4 numbers [x, y, w, h]
+        auto rect = stateData["rect"];
+        SDL_FRect startRect = { rect[0], rect[1], rect[2], rect[3] };
+
+        // Push it into your animation component map
+        player->m_Animation->states[stateName] = { frames, duration, startRect };
+    }
+
+    player->m_Animation->changeState(data["Animation"]["defaultState"]);
 
     return player;
 }
-std::shared_ptr<Entity> gamePlayScene::spawnEnemy(const vec2& position) {
+std::shared_ptr<Entity> gamePlayScene::spawnEnemy(const std::string& bluePrintFilePath) {
     auto enemy = m_manager.addEntity("Enemy");
 
-    enemy->m_Transform      = std::make_shared<cTransform>(position, 1.0f, 0.0f);
+    enemy->m_Transform      = std::make_shared<cTransform>(vec2(300.0f , 300.0f), 1.0f, 0.0f);
     enemy->m_Velocity       = std::make_shared<cVelocity>(vec2(0.0f, 0.0f) , 0.1f);
     enemy->m_Health         = std::make_shared<cHealth>(50);
     enemy->m_Shape          = std::make_shared<cShape>(64, 64, 255, 0, 0, 4);
