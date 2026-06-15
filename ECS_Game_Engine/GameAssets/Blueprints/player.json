@@ -1,56 +1,71 @@
 {
 	"EntityTag": "Player",
 	"Transform": {
-		"start_x": 100.0,
-		"start_y": 100.0
+		"start_x": 600.0,
+		"start_y": 600.0
 	},
 	"Velocity": {
-		"speed": 1.0
+		"speed": 300.0
 	},
 	"Health": {
 		"max": 100
+	},
+	"Input": {},
+	"Collision": {
+		"height": 35,
+		"width": 25,
+		"offset_x": 18,
+		"offset_y":  23
+	},
+	"Shape": {
+		"height": 64,
+		"width": 64,
+		"r": 255,
+		"g": 255,
+		"b": 255,
+		"a": 0
 	},
 	"Animation": {
 		"textureID": "mainPlayerTexture",
 		"states": {
 			"Running Up": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 2432, 64, 64 ]
 			},
 			"Running Down": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 2560, 64, 64 ]
 			},
 			"Running Right": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 2624, 64, 64 ]
 			},
 			"Running Left": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 2496, 64, 64 ]
 			},
 			"Idle Up": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 256, 64, 64 ]
 			},
 			"Idle Down": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 384, 64, 64 ]
 			},
 			"Idle Left": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 320, 64, 64 ]
 			},
 			"Idle Right": {
 				"frames": 8,
-				"duration": 100.0,
+				"duration": 0.1,
 				"rect": [ 0, 448, 64, 64 ]
 			}
 		},

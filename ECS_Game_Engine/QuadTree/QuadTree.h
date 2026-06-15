@@ -4,25 +4,26 @@
 #include"../ECS/Entity.h"
 #include"AABB_bound.h"
 
+//this is not the whole tree but a part of the tree a square of the tree
 class QuadTree {
 private:
-	const int MAX_ENTITIES = 4;
+	const int MAX_ENTITIES = 4;     //max entities that can be stored in one node
 	const int MAX_DEPTH = 5;		//max depth is to make sure that the quad ends at some point when there are a lot of entites in some region
 
 	int			m_level;
 	AABB_Bounds m_bounds;
 
-	std::vector<std::shared_ptr<Entity>>	m_entities;
-	std::unique_ptr<QuadTree>				m_nodes[4];
+	std::vector<std::shared_ptr<Entity>>	m_entities;     //entites that this node is storing
+	std::unique_ptr<QuadTree>				m_nodes[4];     //the 4 child nodes of this tree
 
 	bool m_isDivided = false;
 
 	//make no other outer thing be able to divide this quad
 	void subdivide() {
-		float subWidth = m_bounds.w / 2.0f;
-		float subHeight = m_bounds.h / 2.0f;
-		float x = m_bounds.x;
-		float y = m_bounds.y;
+		float subWidth      = m_bounds.w / 2.0f;
+		float subHeight     = m_bounds.h / 2.0f;
+		float x             = m_bounds.x;
+		float y             = m_bounds.y;
 
 		/*
 						|
@@ -56,8 +57,8 @@ public:
         if (!entity->m_Transform || !entity->m_Collider) return;
 
         AABB_Bounds entityBounds = {
-            entity->m_Transform->position.get_x(),
-            entity->m_Transform->position.get_y(),
+            entity->m_Transform->position.get_x() + entity->m_Collider->offsetX,
+            entity->m_Transform->position.get_y() + entity->m_Collider->offsetY,
             (float)entity->m_Collider->w,
             (float)entity->m_Collider->h
         };

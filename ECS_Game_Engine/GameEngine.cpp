@@ -28,11 +28,24 @@ GameEngine::~GameEngine(){
 
 void GameEngine::paused() { m_paused = !m_paused; }
 void GameEngine::start() { 
+	Uint64 lastTime = SDL_GetPerformanceCounter();
+
 	while (m_isRunning) {
+		Uint64 currentTime = SDL_GetPerformanceCounter();
+
+		float deltaTime = (float)(currentTime - lastTime) / SDL_GetPerformanceFrequency();
+		lastTime = currentTime;
+
+		//cap the delta time , for when the user drags the window or pauses the execution of the game
+		if (deltaTime > 0.05f) {
+			deltaTime = 0.05f;
+		}
+
 		sUserInput();
+
 		auto currentScene = m_mapSceneNameToSceneObject[getCurrentSceneName()];
 		if (currentScene) {
-			currentScene->play(1);
+			currentScene->play(deltaTime);
 		}
 	}
 }

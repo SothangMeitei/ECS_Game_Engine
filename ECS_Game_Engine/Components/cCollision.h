@@ -5,9 +5,10 @@ struct cCollision {
 	//the collider physics of the object that has this as a component
 
 	//for now we make this a rectangle of 
-	int w{ 0 };
-	int h{ 0 };
+	float w;
+	float h;
+	float offsetX;
+	float offsetY;
 	
-	cCollision() {}
-	cCollision(int w, int h) : w(w), h(h) {}
+	cCollision(int w, int h , float x , float y) : w(w), h(h) ,offsetX(x) , offsetY(y) {}
 };

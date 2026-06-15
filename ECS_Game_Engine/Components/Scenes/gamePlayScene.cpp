@@ -121,14 +121,17 @@ gamePlayScene::gamePlayScene(GameEngine* engine , const std::string& configFile)
     //spawn the in game entities for the first time the player enters the scene
     //populate the current scene
     
-    auto p1 = spawnPlayer("./GameAssets/Blueprints/player.json");
-    m_currentSelectedEntity = p1;
+
+    std::unique_ptr<vec2> tempVec2 = std::make_unique<vec2>(700 , 700);
+    auto p2 = spawnEntity("./GameAssets/Blueprints/player.json" , tempVec2.get());
+    m_currentSelectedEntity = p2;
     m_Camera.setTarget(m_currentSelectedEntity);
+
+    spawnEntity("./GameAssets/Blueprints/player.json" , nullptr);
     //for (int i = 0; i < 10; ++i) {
     //    spawnEnemy(vec2(random(0 , windowDimension[1]) , random(0 , windowDimension[1])));  //spawn 10 enemies randomly in bounded by the current screen
     //}
 }
-
 
 //systems
 void gamePlayScene::sCollision() {
@@ -137,8 +140,8 @@ void gamePlayScene::sCollision() {
     //at the start of each of the frame construct the quad tree
     const std::array<int, 2> currentWindowWidthHeight{ m_gameEngineOwnerBackPointer->getWindowDimension() };
 
-    QuadTree collisionTree(0
-        , AABB_Bounds{ 0, 0, static_cast<float>(currentWindowWidthHeight[0]) , static_cast<float>(currentWindowWidthHeight[1]) });
+    // Create a QuadTree large enough to hold the entire level
+    QuadTree collisionTree(0, AABB_Bounds{ -2000.0f, -2000.0f, 4000.0f, 4000.0f });
 
     //insert every entity into the tree , this will construct the quad tree to with all the nodes , to the leaf
     for (auto& e : entities) {
@@ -153,8 +156,8 @@ void gamePlayScene::sCollision() {
         if (!e1->m_Collider || !e1->m_Transform || !e1->m_Velocity) continue;
 
         AABB_Bounds searchBounds = {
-            e1->m_Transform->position.get_x(),
-            e1->m_Transform->position.get_y(),
+            e1->m_Transform->position.get_x() + e1->m_Collider->offsetX,
+            e1->m_Transform->position.get_y() + e1->m_Collider->offsetY,
             (float)e1->m_Collider->w,
             (float)e1->m_Collider->h
         };
@@ -169,11 +172,11 @@ void gamePlayScene::sCollision() {
             std::shared_ptr<cCollision> e1Collider = e1->m_Collider;
             std::shared_ptr<cCollision> e2Collider = e2->m_Collider;
 
-            // 1. Calculate the exact center points
-            float c1x = e1->m_Transform->position.get_x() + (e1Collider->w / 2.0f);
-            float c1y = e1->m_Transform->position.get_y() + (e1Collider->h / 2.0f);
-            float c2x = e2->m_Transform->position.get_x() + (e2Collider->w / 2.0f);
-            float c2y = e2->m_Transform->position.get_y() + (e2Collider->h / 2.0f);
+            // 1. Calculate the exact center points using the offsets
+            float c1x = e1->m_Transform->position.get_x() + e1Collider->offsetX + (e1Collider->w / 2.0f);
+            float c1y = e1->m_Transform->position.get_y() + e1Collider->offsetY + (e1Collider->h / 2.0f);
+            float c2x = e2->m_Transform->position.get_x() + e2Collider->offsetX + (e2Collider->w / 2.0f);
+            float c2y = e2->m_Transform->position.get_y() + e2Collider->offsetY + (e2Collider->h / 2.0f);
 
             // 2. Calculate the distance between centers (The Vector from e2 to e1)
             float dx = c1x - c2x;
@@ -194,7 +197,7 @@ void gamePlayScene::sCollision() {
             float overlapY = min_dist_y - abs_dy;
 
             // Overlap must exist on BOTH axes to be a collision. 
-            // If either overlap is 0 or less, skip.
+            // If either overlap is 0 or less, skip collision did not happen
             if (overlapX <= 0 || overlapY <= 0) continue;
 
             //collision happened , now resolve the collision
@@ -248,20 +251,26 @@ void gamePlayScene::sInput() {
         }
     }
 }
-
-void gamePlayScene::sMovement() {
+void gamePlayScene::sMovement(float deltaTime) {
     auto& entities = m_manager.getEntities();
 
     for (auto& e : entities) {
 
-        // 1. Apply physical movement
         if (e->m_Transform && e->m_Velocity) {
-            e->m_Transform->position += e->m_Velocity->velocity;
+
+            float velX = e->m_Velocity->velocity.get_x();
+            float velY = e->m_Velocity->velocity.get_y();
+
+            // Multiply by deltaTime and add to current position
+            float newX = e->m_Transform->position.get_x() + (velX * deltaTime);
+            float newY = e->m_Transform->position.get_y() + (velY * deltaTime);
+
+            e->m_Transform->position.set_x(newX);
+            e->m_Transform->position.set_y(newY);
         }
 
-        // 2. Control the Animation State based on Velocity
         if (e->m_Animation && e->m_Velocity) {
-            float vx = e->m_Velocity->velocity.get_x();
+            float vx = e->m_Velocity->velocity.get_x(); //get the old velocity 
             float vy = e->m_Velocity->velocity.get_y();
 
             std::string currentAnim = e->m_Animation->currentAnimName;
@@ -287,7 +296,6 @@ void gamePlayScene::sMovement() {
         }
     }
 }
-
 void gamePlayScene::sPlayAudio(const std::string& audioName){
     const std::string& path{ m_soundPaths[audioName] };
 
@@ -307,91 +315,80 @@ void gamePlayScene::sAnimation(float deltaTime) {   //delta time is the time tak
     }
 }
 
-//spawning functions
-std::shared_ptr<Entity> gamePlayScene::spawnPlayer(const std::string& blueprintPath) {
 
-    // 1. Open the file and parse the JSON
+
+
+//spawning functions
+std::shared_ptr<Entity> gamePlayScene::spawnEntity(const std::string& blueprintPath , vec2* posOverride = nullptr) {
     std::ifstream file(blueprintPath);
     if (!file.is_open()) {
-        SDL_Log("ERROR: Could not open blueprint: %s", blueprintPath.c_str());
+        SDL_Log("ERROR: Could not open blueprint: %s in the spawnEntity function\n", blueprintPath.c_str());
         return nullptr;
     }
 
     json data = json::parse(file);
 
-    // 2. Create the Entity using the tag from the JSON
-    auto player = m_manager.addEntity(data["EntityTag"]);
-    std::cout << " entity tag for the player: " << data["EntityTag"];
-    std::cout << "\n start x: " << data["Transform"]["start_x"];
-    std::cout << "\n start y: " << data["Transform"]["start_y"];
-    std::cout << "\n speed for the velocity of the player: " << data["Velocity"]["speed"];
-    // 3. Load Transform
-    float x = data["Transform"]["start_x"];
-    float y = data["Transform"]["start_y"];
-    player->m_Transform = std::make_shared<cTransform>(vec2(x, y), 1.0f, 0.0f);
+    auto entity = m_manager.addEntity(data["EntityTag"]);
 
-    // 4. Load Velocity & Health
-    float speed = data["Velocity"]["speed"];
-    player->m_Velocity = std::make_shared<cVelocity>(vec2(0.0f, 0.0f), speed);
-
-    int maxHealth = data["Health"]["max"];
-    player->m_Health = std::make_shared<cHealth>(maxHealth);
-
-    // 5. Build the other static components
-    player->m_Input = std::make_shared<cInput>();
-    player->m_Shape = std::make_shared<cShape>(64, 64, 0, 0, 255, 4);
-    player->m_Collider = std::make_shared<cCollision>(64, 64);
-
-    // PART 6: The Magic - Loading Animations Dynamically!
-
-    std::string texID = data["Animation"]["textureID"];
-    player->m_Animation = std::make_shared<cAnimation>(texID);
-
-    // We can loop through the "states" dictionary directly!
-    for (auto& [stateName, stateData] : data["Animation"]["states"].items()) {
-
-        int frames = stateData["frames"];
-        float duration = stateData["duration"];
-
-        // Grab the array of 4 numbers [x, y, w, h]
-        auto rect = stateData["rect"];
-        SDL_FRect startRect = { rect[0], rect[1], rect[2], rect[3] };
-
-        // Push it into your animation component map
-        player->m_Animation->states[stateName] = { frames, duration, startRect };
+    // 2. Transform (Every physical entity usually needs this)
+    if (data.contains("Transform")) {
+        float x = (posOverride) ? posOverride->get_x() : data["Transform"]["start_x"].get<float>();
+        float y = (posOverride) ? posOverride->get_y() : data["Transform"]["start_y"].get<float>();
+        entity->m_Transform = std::make_shared<cTransform>(vec2(x, y), 1.0f, 0.0f);
     }
 
-    player->m_Animation->changeState(data["Animation"]["defaultState"]);
+    // 3. Velocity
+    if (data.contains("Velocity")) {
+        float speed = data["Velocity"]["speed"];
+        entity->m_Velocity = std::make_shared<cVelocity>(vec2(0.0f, 0.0f), speed);
+    }
 
-    return player;
+    // 4. Shape
+    if (data.contains("Shape")) {
+        auto& s = data["Shape"];
+        entity->m_Shape = std::make_shared<cShape>(s["width"], s["height"], s["r"], s["g"], s["b"], s["a"]);
+    }
+
+    // 5. Collision
+    if (data.contains("Collision")) {
+        float cw = data["Collision"]["width"];
+        float ch = data["Collision"]["height"];
+
+        //.value() makes it default to 0.0f if it does not exist in the file
+        float cox = data["Collision"].value("offset_x", 0.0f);
+        float coy = data["Collision"].value("offset_y", 0.0f);
+
+        entity->m_Collider = std::make_shared<cCollision>(cw, ch, cox, coy);
+    }
+
+    // 6. Animation
+    if (data.contains("Animation")) {
+        entity->m_Animation = std::make_shared<cAnimation>(data["Animation"]["textureID"]);
+
+        for (auto& [stateName, stateData] : data["Animation"]["states"].items()) {
+            auto rect = stateData["rect"];
+            SDL_FRect startRect = { rect[0], rect[1], rect[2], rect[3] };
+            entity->m_Animation->states[stateName] = { stateData["frames"], stateData["duration"], startRect };
+        }
+        entity->m_Animation->changeState(data["Animation"]["defaultState"]);
+    }
+
+    // 7. Input (Only the player usually gets this)
+    if (data.contains("Input")) {
+        entity->m_Input = std::make_shared<cInput>();
+    }
+
+    if (data.contains("Health")) {
+        entity->m_Health = std::make_shared<cHealth>(data["Health"]["max"]);
+    }
+
+    return entity;
+
 }
-std::shared_ptr<Entity> gamePlayScene::spawnEnemy(const std::string& bluePrintFilePath) {
-    auto enemy = m_manager.addEntity("Enemy");
 
-    enemy->m_Transform      = std::make_shared<cTransform>(vec2(300.0f , 300.0f), 1.0f, 0.0f);
-    enemy->m_Velocity       = std::make_shared<cVelocity>(vec2(0.0f, 0.0f) , 0.1f);
-    enemy->m_Health         = std::make_shared<cHealth>(50);
-    enemy->m_Shape          = std::make_shared<cShape>(64, 64, 255, 0, 0, 4);
-    enemy->m_Collider       = std::make_shared<cCollision>(64, 64);
-    enemy->m_Input          = nullptr;
-    enemy->m_LifeSpan       = nullptr;
-    enemy->m_TextOutput     = nullptr;
 
-    return enemy;
-}
-std::shared_ptr<Entity> gamePlayScene::spawnBullet(const vec2& position, const vec2& velocity, int damage, float lifespanSeconds) {
-    auto bullet = m_manager.addEntity("Bullet");
 
-    bullet->m_Transform = std::make_shared<cTransform>(position, 1.0f, 0.0f);
-    bullet->m_Velocity = std::make_shared<cVelocity>(velocity);
-    bullet->m_Shape = std::make_shared<cShape>(10, 10, 255, 255, 0, 4);
-    bullet->m_Health = std::make_shared<cHealth>(damage);
-    bullet->m_LifeSpan = std::make_shared<cLifeSpan>(lifespanSeconds);
-    bullet->m_Input = nullptr;
-    bullet->m_TextOutput = nullptr;
 
-    return bullet;
-}
 
 //getters
 std::shared_ptr<Entity> gamePlayScene::getCurrentSelectedEntity() {
@@ -404,6 +401,9 @@ std::unordered_map<std::string, std::function<void()>>& gamePlayScene::getAction
 void gamePlayScene::setCurrentSelectedEntity(const std::shared_ptr<Entity>& newEntity){
 	m_currentSelectedEntity = newEntity;
 }
+
+
+
 
 //overrides
 void gamePlayScene::sDoAction(const Action& action) {
@@ -425,12 +425,14 @@ void gamePlayScene::sDoAction(const Action& action) {
 void gamePlayScene::updateInternals(float deltaTime) {
     m_manager.update();
     sInput();
-	sMovement();
+	sMovement(deltaTime);
 	sCollision();
 	sPhysics();
     sAnimation(deltaTime);
     m_internalEventBus.resolveEventsFromEventQueue();
 }
+
+
 
 //helper for the renderer system
 inline void drawPolygon(double centerX, double centerY, double radius, int vertices, double rotation, std::shared_ptr<cShape> shape , SDL_Renderer* m_renderer) {
@@ -453,34 +455,59 @@ void gamePlayScene::render() {
     SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
     SDL_RenderClear(renderer);
 
+    // --- CAMERA MATH ---
+    // Calculate the offset exactly once per frame based on the target's World Space
+    float camOffsetX = 0.0f;
+    float camOffsetY = 0.0f;
+
+    if (m_Camera.getTarget() && m_Camera.getTarget()->m_Transform) {
+        std::array<int, 2> windowDim = m_gameEngineOwnerBackPointer->getWindowDimension();
+
+        float targetX = m_Camera.getTarget()->m_Transform->position.get_x();
+        float targetY = m_Camera.getTarget()->m_Transform->position.get_y();
+
+        // Calculate offset to place the target exactly in the middle of the screen
+        camOffsetX = (windowDim[0] / 2.0f) - targetX;
+        camOffsetY = (windowDim[1] / 2.0f) - targetY;
+    }
+    // -------------------
+
     for (auto& entity : m_manager.getEntities()) {
+
         if (entity->m_Transform && entity->m_Animation) {
             auto& anim = entity->m_Animation;
             SDL_Texture* tex = m_assetManager.getTexture(anim->textureID);
-
             const AnimState& stateMath = anim->states[anim->currentAnimName];
 
-            // Calculate the current frame's rectangle on the sprite sheet
             SDL_FRect sourceRect = stateMath.startRect;
-            sourceRect.x += (anim->currentFrame * sourceRect.w); // Shift right by N frames
+            sourceRect.x += (anim->currentFrame * sourceRect.w);
 
-            SDL_FRect destRect = { entity->m_Transform->position.x, entity->m_Transform->position.y, sourceRect.w, sourceRect.h };
+            // Apply the Camera Offset ONLY when drawing to the screen!
+            // We never touch entity->m_Transform directly.
+            SDL_FRect destRect = {
+                entity->m_Transform->position.get_x() + camOffsetX,
+                entity->m_Transform->position.get_y() + camOffsetY,
+                sourceRect.w,
+                sourceRect.h
+            };
 
-            SDL_RenderTexture(m_gameEngineOwnerBackPointer->getRenderer(), tex, &sourceRect, &destRect);
+            SDL_RenderTexture(renderer, tex, &sourceRect, &destRect);
         }
-        if (entity->m_Transform && !entity->m_Animation && entity->m_Collider) {
-            //render the shape of the entity
+
+        if (entity->m_Transform && entity->m_Collider) {
             auto& collider = entity->m_Collider;
             auto& position = entity->m_Transform->position;
-            drawPolygon(
-                position.get_x() + collider->w / 2,
-                position.get_y() + collider->h / 2,
-                collider->w / 2,
-                4,
-                95.0f,     //this rotation is in radiants
-                entity->m_Shape,
-                m_gameEngineOwnerBackPointer->getRenderer()
-            );
+
+            // Apply the internal offset to the green box!
+            SDL_FRect collisionBox = {
+                position.get_x() + camOffsetX + collider->offsetX,
+                position.get_y() + camOffsetY + collider->offsetY,
+                (float)collider->w,
+                (float)collider->h
+            };
+
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+            SDL_RenderRect(renderer, &collisionBox);
         }
     }
     SDL_RenderPresent(renderer);

@@ -1,4 +1,5 @@
-
+/*
+	
 #include "game.h"
 #include<fstream>
 #include<random>
@@ -404,3 +405,4 @@ void game::start() {
 		SDL_RenderPresent(m_renderer);
 	}
 }
+*/

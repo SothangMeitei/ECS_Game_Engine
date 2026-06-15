@@ -29,15 +29,13 @@ public:
 	void sCollision();
 	void sPhysics();
 	void sInput();
-	void sMovement();
+	void sMovement(float);
 	void sPlayAudio(const std::string& audioFileName);
 	void sAnimation(float deltaTime);
+	void sCamera();
 
 	//helper functions for the spawning of the in game entity types
-	std::shared_ptr<Entity> spawnPlayer(const std::string&);
-	std::shared_ptr<Entity> spawnEnemy(const std::string&);
-	std::shared_ptr<Entity> spawnBullet(const vec2& position, const vec2& velocity, int damage, float lifespanSeconds);
-
+	std::shared_ptr<Entity> spawnEntity(const std::string& , vec2*);
 	//getters
 	std::shared_ptr<Entity> getCurrentSelectedEntity();
 	std::unordered_map<std::string, std::function<void()>>& getActionMap();
